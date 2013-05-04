@@ -1,0 +1,1 @@
+add_library(curi curi.c curi.h)
