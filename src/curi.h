@@ -21,16 +21,39 @@
 #ifndef CURI_H
 #define CURI_H
 
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /** an opaque handle to a parser */
-typedef struct curi_handle_t * curi_handle;
+typedef struct curi_handle_t* curi_handle;
 
-curi_handle curi_alloc(void* userData);
+/** error codes returned from this interface */
+typedef enum 
+{
+    curi_status_success = 0, //!< No error
+    curi_status_canceled, //!< A callback returned 0, stopping the operation 
+    curi_status_error //!< An error occured
+} curi_status;
+
+typedef struct 
+{
+    int (*curi_scheme)(void* userData, const char* scheme, size_t schemeLen);
+    int (*curi_path)(void* userData, const char* path, size_t pathLen);
+    int (*curi_path_segment)(void* userData, const char* pathSegment, size_t pathSegmentLen);
+    int (*curi_path_extension)(void* userData, const char* pathExtension, size_t pathExtensionLen);
+    int (*curi_query)(void* userData, const char* query, size_t queryLen);
+    int (*curi_query_item)(void* userData, const char* key, size_t keyLen, const char* value, size_t valueLen);
+    int (*curi_fragment)(void* userData, const char* fragment, size_t fragmentLen);
+} curi_callbacks;
+
+curi_handle curi_alloc(const curi_callbacks* callbacks, void* userData);
 
 void curi_free(curi_handle handle);
+
+curi_status curi_parse(curi_handle handle, const char* uri, size_t len);
 
 #ifdef __cplusplus
 }
