@@ -160,6 +160,15 @@ TEST_CASE("Parsing/Userinfo/Success", "Successful parsing of URIs userinfo")
         CHECK(uri.userinfo == "bar");
     }
 
+    SECTION("LocalFile", "")
+    {
+        const std::string uriStr("file:///foo.xml");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.userinfo.empty());
+    }
+
     curi_free(curi);
 }
 
@@ -192,6 +201,15 @@ TEST_CASE("Parsing/Host/Success", "Successful parsing of URIs host")
         CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
 
         CHECK(uri.host == "example.com");
+    }
+
+    SECTION("LocalFile", "")
+    {
+        const std::string uriStr("file:///foo.xml");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.host.empty());
     }
 
     curi_free(curi);
@@ -228,6 +246,15 @@ TEST_CASE("Parsing/Port/Success", "Successful parsing of URIs port")
         CHECK(uri.port == "8042");
     }
 
+    SECTION("LocalFile", "")
+    {
+        const std::string uriStr("file:///foo.xml");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.port.empty());
+    }
+
     curi_free(curi);
 }
 
@@ -260,6 +287,24 @@ TEST_CASE("Parsing/Path/Success", "Successful parsing of URIs path")
         CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
 
         CHECK(uri.path == "/over/there");
+    }
+
+    SECTION("LocalFile", "")
+    {
+        const std::string uriStr("file:///foo.xml");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.path == "/foo.xml");
+    }
+
+    SECTION("LocalFile_Short", "")
+    {
+        const std::string uriStr("file:foo.xml");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.path == "foo.xml");
     }
 
     curi_free(curi);
