@@ -93,6 +93,42 @@ TEST_CASE("Parsing/Scheme/Success", "Successful parsing of URIs scheme")
     curi_free(curi);
 }
 
+TEST_CASE("Parsing/Scheme/Error", "Failing parsing of URIs scheme")
+{
+    curi_callbacks callbacks;
+    memset(&callbacks,0,sizeof(callbacks));
+
+    URI uri;
+    curi_handle curi = curi_alloc(&callbacks,&uri);
+
+    SECTION("StartingWithNumber", "")
+    {
+        const std::string uriStr("3ftp://hello.org");
+        
+        CHECK(curi_status_error == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+    }
+
+    SECTION("Ampersand", "")
+    {
+        const std::string uriStr("bar&foo://google.com");
+
+        CHECK(curi_status_error == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.scheme.empty());
+    }
+
+    SECTION("ExclamationMark", "")
+    {
+        const std::string uriStr("bar??://google.com");
+
+        CHECK(curi_status_error == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.scheme.empty());
+    }
+
+    curi_free(curi);
+}
+
 extern "C"
 {
     static int userinfo(void* userData, const char* userinfo, size_t userinfoLen);

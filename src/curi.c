@@ -135,18 +135,22 @@ static curi_status parse_scheme(curi_handle handle, const char* uri, size_t len,
 
             if (status == curi_status_error)
             {
-                // end of uri reached
+                // end of scheme reached
+                status = curi_status_success;
                 if (handle->callbacks.scheme)
                 {
                     if (handle->callbacks.scheme(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
                     {
-                        return curi_status_canceled;
+                        status = curi_status_canceled;
                     }
                 }
-                return curi_status_success;
+                break;
             }
+
         }
     }
+
+    return status;
 }
 
 static curi_status parse_unreserved(curi_handle handle, const char* uri, size_t len, size_t* offset)
