@@ -20,6 +20,7 @@
 
 #include "curi.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
@@ -56,22 +57,42 @@ void curi_free(curi_handle handle)
     free(handle);
 }
 
-static curi_status read_scheme(curi_handle handle, const char* uri, size_t* offset, size_t len)
-{
-    size_t i = *offset;
+static const char end = '\0';
 
-    // 1st charcter should belong to [a-zA-Z]
-    if (isalpha(uri[i]) == 0)
+static const char* readChar(const char* uri, size_t len, size_t* offset)
+{    
+    const char* c = &end;
+    if (*offset < len)
+    {
+        c = uri + *offset;
+    }
+    ++(*offset);
+    return c;
+}
+
+static void unreadChar(const char* uri, size_t len, size_t* offset)
+{
+    assert(*offset > 0);
+    --(*offset);
+}
+
+static curi_status read_scheme(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    const size_t initialOffset = *offset;
+
+    // 1st character should belong to [a-zA-Z]
+    const char* c = readChar(uri,len,offset);
+    if (isalpha(*c) == 0)
     {
         // TODO: set an error string somewhere
         return curi_status_error;
     }
-    ++i;
     
-    bool endFound = false;       
-    while (i < len && !endFound)
+    bool endFound = false;
+    c = readChar(uri,len,offset);    
+    while (*c != '\0' && !endFound)
     {
-        switch (uri[i])
+        switch (*c)
         {
         case ':': // scheme separator reached
             endFound = true;
@@ -79,27 +100,30 @@ static curi_status read_scheme(curi_handle handle, const char* uri, size_t* offs
         case '+': // valid special characters
         case '-':
         case '.':
-            ++i;
+            c = readChar(uri,len,offset);
             break;
         default:
-            if (isalnum(uri[i]) == 0)
+            if (isalnum(*c) == 0)
             {
                 // TODO: set an error string somewhere
                 return curi_status_error;
             }
-            ++i;
+            c = readChar(uri,len,offset);
         }
     }
 
     // end of uri reached
     if (handle->callbacks.curi_scheme)
     {
-        if (handle->callbacks.curi_scheme(handle->userData,uri,i) == 0)
+        if (handle->callbacks.curi_scheme(handle->userData, uri + initialOffset, *offset - initialOffset - 1) == 0)
         {
             return curi_status_canceled;
         }
     }
-    *offset = i;
+    
+    // skip the separator
+    readChar(uri,len,offset);
+
     return curi_status_success;
 }
 
@@ -109,7 +133,7 @@ curi_status curi_parse(curi_handle handle, const char* uri, size_t len)
 
     size_t offset = 0;
     if (status == curi_status_success)
-        status = read_scheme(handle,uri,&offset,len);
+        status = read_scheme(handle,uri,len,&offset);
 
     return status; 
 }
