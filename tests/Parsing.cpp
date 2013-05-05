@@ -34,6 +34,12 @@
 struct URI
 {
     std::string scheme;
+    std::string userinfo;
+    std::string host;
+    std::string port;
+    std::string path;
+    std::string query;
+    std::string fragment;
 };
 
 extern "C"
@@ -53,27 +59,18 @@ TEST_CASE("Parsing/Scheme/Success", "Successful parsing of URIs scheme")
 {
     curi_callbacks callbacks;
     memset(&callbacks,0,sizeof(callbacks));
-    callbacks.curi_scheme = scheme;
+    callbacks.scheme = scheme;
 
     URI uri;
     curi_handle curi = curi_alloc(&callbacks,&uri);
 
-    SECTION("Simple", "")
+    SECTION("FullExample", "")
     {
-        const std::string uriStr("http://google.com");
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
         
         CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
 
-        CHECK(uri.scheme == "http");
-    }
-
-    SECTION("OnlyScheme", "")
-    {
-        const std::string uriStr("ftp");
-
-        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
-
-        CHECK(uri.scheme == "ftp");
+        CHECK(uri.scheme == "foo");
     }
 
     SECTION("NumberInScheme", "")
@@ -96,40 +93,35 @@ TEST_CASE("Parsing/Scheme/Success", "Successful parsing of URIs scheme")
     curi_free(curi);
 }
 
-TEST_CASE("Parsing/Scheme/Error", "Failed parsing of URIs scheme")
+extern "C"
+{
+    static int userinfo(void* userData, const char* userinfo, size_t userinfoLen);
+}
+
+int userinfo(void* userData, const char* userinfo, size_t userinfoLen)
+{
+    CAPTURE(userinfo);
+    CAPTURE(userinfoLen);
+    static_cast<URI*>(userData)->userinfo.assign(userinfo,userinfoLen);
+    return 1;
+}
+
+TEST_CASE("Parsing/Userinfo/Success", "Successful parsing of URIs userinfo")
 {
     curi_callbacks callbacks;
     memset(&callbacks,0,sizeof(callbacks));
-    callbacks.curi_scheme = scheme;
+    callbacks.userinfo = userinfo;
 
     URI uri;
     curi_handle curi = curi_alloc(&callbacks,&uri);
 
-    SECTION("NumberAtFirst", "")
+    SECTION("FullExample", "")
     {
-        const std::string uriStr("2foo://google.com");
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
         
-        CHECK(curi_status_error == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
 
-        CHECK(uri.scheme.empty());
-    }
-
-    SECTION("Ampersand", "")
-    {
-        const std::string uriStr("bar&foo://google.com");
-        
-        CHECK(curi_status_error == curi_parse(curi,uriStr.c_str(),uriStr.length()));
-
-        CHECK(uri.scheme.empty());
-    }
-
-    SECTION("ExclamationMark", "")
-    {
-        const std::string uriStr("bar??://google.com");
-        
-        CHECK(curi_status_error == curi_parse(curi,uriStr.c_str(),uriStr.length()));
-
-        CHECK(uri.scheme.empty());
+        CHECK(uri.userinfo == "bar");
     }
 
     curi_free(curi);
@@ -137,7 +129,177 @@ TEST_CASE("Parsing/Scheme/Error", "Failed parsing of URIs scheme")
 
 extern "C"
 {
-    static int singleElementCancellingCallback(void* userData, const char* str, size_t strLen)
+    static int host(void* userData, const char* host, size_t hostLen);
+}
+
+int host(void* userData, const char* host, size_t hostLen)
+{
+    CAPTURE(host);
+    CAPTURE(hostLen);
+    static_cast<URI*>(userData)->host.assign(host,hostLen);
+    return 1;
+}
+
+TEST_CASE("Parsing/Host/Success", "Successful parsing of URIs host")
+{
+    curi_callbacks callbacks;
+    memset(&callbacks,0,sizeof(callbacks));
+    callbacks.host = host;
+
+    URI uri;
+    curi_handle curi = curi_alloc(&callbacks,&uri);
+
+    SECTION("FullExample", "")
+    {
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.host == "example.com");
+    }
+
+    curi_free(curi);
+}
+
+extern "C"
+{
+    static int port(void* userData, const char* port, size_t portLen);
+}
+
+int port(void* userData, const char* port, size_t portLen)
+{
+    CAPTURE(port);
+    CAPTURE(portLen);
+    static_cast<URI*>(userData)->port.assign(port,portLen);
+    return 1;
+}
+
+TEST_CASE("Parsing/Port/Success", "Successful parsing of URIs port")
+{
+    curi_callbacks callbacks;
+    memset(&callbacks,0,sizeof(callbacks));
+    callbacks.port = port;
+
+    URI uri;
+    curi_handle curi = curi_alloc(&callbacks,&uri);
+
+    SECTION("FullExample", "")
+    {
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.port == "8042");
+    }
+
+    curi_free(curi);
+}
+
+extern "C"
+{
+    static int path(void* userData, const char* path, size_t pathLen);
+}
+
+int path(void* userData, const char* path, size_t pathLen)
+{
+    CAPTURE(path);
+    CAPTURE(pathLen);
+    static_cast<URI*>(userData)->path.assign(path,pathLen);
+    return 1;
+}
+
+TEST_CASE("Parsing/Path/Success", "Successful parsing of URIs path")
+{
+    curi_callbacks callbacks;
+    memset(&callbacks,0,sizeof(callbacks));
+    callbacks.path = path;
+
+    URI uri;
+    curi_handle curi = curi_alloc(&callbacks,&uri);
+
+    SECTION("FullExample", "")
+    {
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.path == "/over/there");
+    }
+
+    curi_free(curi);
+}
+
+extern "C"
+{
+    static int query(void* userData, const char* query, size_t queryLen);
+}
+
+int query(void* userData, const char* query, size_t queryLen)
+{
+    CAPTURE(query);
+    CAPTURE(queryLen);
+    static_cast<URI*>(userData)->fragment.assign(query,queryLen);
+    return 1;
+}
+
+TEST_CASE("Parsing/Query/Success", "Successful parsing of URIs query")
+{
+    curi_callbacks callbacks;
+    memset(&callbacks,0,sizeof(callbacks));
+    callbacks.query = query;
+
+    URI uri;
+    curi_handle curi = curi_alloc(&callbacks,&uri);
+
+    SECTION("FullExample", "")
+    {
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.fragment == "name=ferret");
+    }
+
+    curi_free(curi);
+}
+
+extern "C"
+{
+    static int fragment(void* userData, const char* fragment, size_t fragmentLen);
+}
+
+int fragment(void* userData, const char* fragment, size_t fragmentLen)
+{
+    CAPTURE(fragment);
+    CAPTURE(fragmentLen);
+    static_cast<URI*>(userData)->fragment.assign(fragment,fragmentLen);
+    return 1;
+}
+
+TEST_CASE("Parsing/Fragment/Success", "Successful parsing of URIs fragment")
+{
+    curi_callbacks callbacks;
+    memset(&callbacks,0,sizeof(callbacks));
+    callbacks.fragment = fragment;
+
+    URI uri;
+    curi_handle curi = curi_alloc(&callbacks,&uri);
+
+    SECTION("FullExample", "")
+    {
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+        
+        CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
+
+        CHECK(uri.fragment == "nose");
+    }
+
+    curi_free(curi);
+}
+
+extern "C"
+{
+    static int cancellingCallback(void* userData, const char* str, size_t strLen)
     {
         return 0;
     }
@@ -149,7 +311,7 @@ TEST_CASE("Parsing/Scheme/Cancel", "Canceled parsing of URI scheme")
     {
         curi_callbacks callbacks;
         memset(&callbacks,0,sizeof(callbacks));
-        callbacks.curi_scheme = singleElementCancellingCallback;
+        callbacks.scheme = cancellingCallback;
 
         curi_handle curi = curi_alloc(&callbacks,NULL);
 

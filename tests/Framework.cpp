@@ -56,11 +56,7 @@ TEST_CASE("Framework/AllocFree/UserData", "curi_alloc and curi_free testing rela
 
 extern "C"
 {
-    static int singleElementCallback(void* userData, const char* str, size_t strLen)
-    {
-        return 1;
-    }
-    static int doubleElementCallback(void* userData, const char* str1, size_t str1Len, const char* str2, size_t str2Len)
+    static int callback(void* userData, const char* str, size_t strLen)
     {
         return 1;
     }
@@ -91,13 +87,13 @@ TEST_CASE("Framework/AllocFree/Callback", "curi_alloc and curi_free testing")
     SECTION("Full Callback", "")
     {
         curi_callbacks callbacks;
-        callbacks.curi_scheme = singleElementCallback;
-        callbacks.curi_path = singleElementCallback;
-        callbacks.curi_path_segment = singleElementCallback;
-        callbacks.curi_path_extension = singleElementCallback;
-        callbacks.curi_query = singleElementCallback;
-        callbacks.curi_query_item = doubleElementCallback;
-        callbacks.curi_fragment = singleElementCallback;
+        callbacks.scheme = callback;
+        callbacks.userinfo = callback;
+        callbacks.host = callback;
+        callbacks.port = callback;
+        callbacks.path = callback;
+        callbacks.query = callback;
+        callbacks.fragment = callback;
 
         curi_handle curi = curi_alloc(&callbacks,&userData);
 
