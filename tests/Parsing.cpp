@@ -18,12 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#pragma warning(push, 0)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
-#pragma warning(push, 0)
 #include <catch.hpp>
-#pragma warning(pop)
 #pragma GCC diagnostic pop
+#pragma warning(pop)
 
 #include <curi.h>
 

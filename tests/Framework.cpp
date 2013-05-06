@@ -20,12 +20,12 @@
 
 #define CATCH_CONFIG_MAIN // Telling catch to generate a main
 
+#pragma warning(push, 0)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
-#pragma warning(push, 0)
 #include <catch.hpp>
-#pragma warning(pop)
 #pragma GCC diagnostic pop
+#pragma warning(pop)
 
 #include <curi.h>
 
@@ -38,7 +38,7 @@ TEST_CASE("Framework/AllocFree/UserData", "curi_alloc and curi_free testing rela
     {
         curi_handle curi = curi_alloc(&callbacks,NULL);
 
-        CHECK(curi);
+        CHECK(curi != NULL);
 
         curi_free(curi);
     }
@@ -48,7 +48,7 @@ TEST_CASE("Framework/AllocFree/UserData", "curi_alloc and curi_free testing rela
         int userData = 3;
         curi_handle curi = curi_alloc(&callbacks,&userData);
 
-        CHECK(curi);
+        CHECK(curi != NULL);
 
         curi_free(curi);
     }
@@ -79,7 +79,7 @@ TEST_CASE("Framework/AllocFree/Callback", "curi_alloc and curi_free testing")
 
         curi_handle curi = curi_alloc(&callbacks,&userData);
 
-        CHECK(curi);
+        CHECK(curi != NULL);
 
         curi_free(curi);
     }
@@ -97,7 +97,7 @@ TEST_CASE("Framework/AllocFree/Callback", "curi_alloc and curi_free testing")
 
         curi_handle curi = curi_alloc(&callbacks,&userData);
 
-        CHECK(curi);
+        CHECK(curi != NULL);
 
         curi_free(curi);
     }
