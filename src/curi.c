@@ -299,6 +299,66 @@ static curi_status parse_reg_name(curi_handle handle, const char* uri, size_t le
     }
 }
 
+static curi_status parse_dec_octet(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // dec-octet = DIGIT                 ; 0-9
+    //           / %x31-39 DIGIT         ; 10-99
+    //           / "1" 2DIGIT            ; 100-199
+    //           / "2" %x30-34 DIGIT     ; 200-249
+    //           / "25" %x30-35          ; 250-255
+    curi_status status = curi_status_success;
+    int number;
+    char numberStr[4] = {'\0', '\0', '\0', '\0'};
+    size_t previousOffset;
+    int i;
+
+    for (i = 0 ; i < 3 ; ++i)
+    {
+        previousOffset = *offset;
+        if (parse_digit(handle,uri,len,offset) !=  curi_status_success)
+        {
+            *offset = previousOffset;
+            break;
+        }
+        numberStr[i] = uri[previousOffset];
+    }
+
+    number = atoi(numberStr);
+    if (number >= 0 && number <= 255)
+        return curi_status_success;
+    else
+        return curi_status_error;
+}
+
+static curi_status parse_IPv4address(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet
+    curi_status status = curi_status_success;
+
+    if (status == curi_status_success)
+        status = parse_dec_octet(handle, uri, len, offset);
+
+    if (status == curi_status_success)
+        status = parse_char(handle, '.', uri, len, offset);
+
+    if (status == curi_status_success)
+        status = parse_dec_octet(handle, uri, len, offset);
+
+    if (status == curi_status_success)
+        status = parse_char(handle, '.', uri, len, offset);
+
+    if (status == curi_status_success)
+        status = parse_dec_octet(handle, uri, len, offset);
+
+    if (status == curi_status_success)
+        status = parse_char(handle, '.', uri, len, offset);
+
+    if (status == curi_status_success)
+        status = parse_dec_octet(handle, uri, len, offset);
+
+    return status;
+}
+
 static curi_status parse_host(curi_handle handle, const char* uri, size_t len, size_t* offset)
 {
     // host = IP-literal / IPv4address / reg-name
@@ -308,11 +368,11 @@ static curi_status parse_host(curi_handle handle, const char* uri, size_t len, s
     if (status == curi_status_error)
         TRY(status, offset, parse_reg_name(handle, uri, len, offset));
 
-    // if (status == curi_status_error)
-    //     TRY(status, offset, parse_IP-literal(uri,len,offset)); // TODO implement
-
-    // if (status == curi_status_error)
-    //     TRY(status, offset, parse_IPv4address(uri,len,offset)); // TODO implement
+    /*if (status == curi_status_error)
+        TRY(status, offset, parse_IP_literal(handle, uri, len, offset));*/
+    
+    if (status == curi_status_error)
+        TRY(status, offset, parse_IPv4address(handle, uri, len, offset));
 
     if (status == curi_status_success)
     {
