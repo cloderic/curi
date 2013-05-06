@@ -22,7 +22,7 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <stdbool.h>
+
 #include <string.h>
 
 struct curi_handle_t 
@@ -33,13 +33,15 @@ struct curi_handle_t
 
 curi_handle curi_alloc(const curi_callbacks* callbacks, void* userData)
 {
+    curi_handle hnd = NULL;
+
     if (callbacks == NULL)
     {
         // TODO: set an error string somewhere
         return NULL;
     }
 
-    curi_handle hnd = (curi_handle)malloc(sizeof(struct curi_handle_t));
+    hnd = (curi_handle)malloc(sizeof(struct curi_handle_t));
     if (hnd == NULL)
     {
         // TODO: set an error string somewhere
@@ -115,7 +117,7 @@ static curi_status parse_scheme(curi_handle handle, const char* uri, size_t len,
 
     if (status == curi_status_success)
     {
-        while (true)
+        while (1)
         {
             status = curi_status_error;
             if (status == curi_status_error)
@@ -244,7 +246,7 @@ static curi_status parse_userinfo(curi_handle handle, const char* uri, size_t le
     // userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
     const size_t initialOffset = *offset;
 
-    while (true)
+    while (1)
     {
         curi_status status = curi_status_error;
         if (status == curi_status_error)
@@ -277,7 +279,7 @@ static curi_status parse_userinfo(curi_handle handle, const char* uri, size_t le
 static curi_status parse_reg_name(curi_handle handle, const char* uri, size_t len, size_t* offset)
 {
     // reg-name = *( unreserved / pct-encoded / sub-delims )
-    while (true)
+    while (1)
     {
         curi_status status = curi_status_error;
         if (status == curi_status_error)
@@ -330,7 +332,7 @@ static curi_status parse_port(curi_handle handle, const char* uri, size_t len, s
     // port = *DIGIT
     const size_t initialOffset = *offset;
 
-    while (true)
+    while (1)
     {
         size_t subOffset = *offset;
         curi_status subStatus = parse_digit(handle,uri,len,&subOffset);
@@ -443,7 +445,7 @@ static curi_status parse_segments(curi_handle handle, const char* uri, size_t le
     // segments  = *( "/" segment )
     curi_status status = curi_status_success;
 
-    while (true)
+    while (1)
     {
         size_t subOffset = *offset;
         curi_status subStatus = curi_status_success;
@@ -624,7 +626,7 @@ static curi_status parse_query_or_fragment(curi_handle handle, const char* uri, 
     // query = *( pchar / "/" / "?" )
     // fragment = *( pchar / "/" / "?" )
 
-    while (true)
+    while (1)
     {
         curi_status status = curi_status_error;
         if (status == curi_status_error)
