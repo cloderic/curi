@@ -1,5 +1,8 @@
 language: c
 compiler:
-  - gcc
-  - clang
-script: cmake ./ && make all && ctest --output-on-failure
+    - gcc
+    - clang
+script: 
+    - cmake ./
+    - make all
+    - ctest --output-on-failure
