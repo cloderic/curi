@@ -9,7 +9,7 @@ target_link_libraries(curi_tests curi)
 
 if(MSVC)
     set_target_properties(curi_tests PROPERTIES
-        COMPILE_FLAGS /wd4297)
+        COMPILE_FLAGS "/wd4297 /wd4800")
 endif()
 
 add_test(

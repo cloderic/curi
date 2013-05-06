@@ -38,7 +38,7 @@ TEST_CASE("Framework/AllocFree/UserData", "curi_alloc and curi_free testing rela
     {
         curi_handle curi = curi_alloc(&callbacks,NULL);
 
-        CHECK(curi != NULL);
+        CHECK(curi);
 
         curi_free(curi);
     }
@@ -48,7 +48,7 @@ TEST_CASE("Framework/AllocFree/UserData", "curi_alloc and curi_free testing rela
         int userData = 3;
         curi_handle curi = curi_alloc(&callbacks,&userData);
 
-        CHECK(curi != NULL);
+        CHECK(curi);
 
         curi_free(curi);
     }
@@ -79,7 +79,7 @@ TEST_CASE("Framework/AllocFree/Callback", "curi_alloc and curi_free testing")
 
         curi_handle curi = curi_alloc(&callbacks,&userData);
 
-        CHECK(curi != NULL);
+        CHECK(curi);
 
         curi_free(curi);
     }
@@ -97,7 +97,7 @@ TEST_CASE("Framework/AllocFree/Callback", "curi_alloc and curi_free testing")
 
         curi_handle curi = curi_alloc(&callbacks,&userData);
 
-        CHECK(curi != NULL);
+        CHECK(curi);
 
         curi_free(curi);
     }
