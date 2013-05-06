@@ -176,7 +176,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
         CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
 
         CHECK(uri.scheme == "ftp");
-        CHECK(uri.userinfo.empty()); // TODO, to fix the call shouldn't be done until it is sure the user info is there
+        CHECK(uri.userinfo.empty());
         CHECK(uri.host == "ftp.is.co.za");
         CHECK(uri.port.empty());
         CHECK(uri.path == "/rfc/rfc1808.txt");
@@ -191,7 +191,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
         CHECK(curi_status_success == curi_parse(curi,uriStr.c_str(),uriStr.length()));
 
         CHECK(uri.scheme == "http");
-        CHECK(uri.userinfo.empty()); // TODO, to fix the call shouldn't be done until it is sure the user info is there
+        CHECK(uri.userinfo.empty());
         CHECK(uri.host == "www.ietf.org");
         CHECK(uri.port.empty());
         CHECK(uri.path == "/rfc/rfc2396.txt");
@@ -207,7 +207,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
         CHECK(uri.scheme == "ldap");
         CHECK(uri.userinfo.empty());
-        CHECK(uri.host == "[2001:db8::7]"); // TODO, to fix, IP host should work
+        CHECK(uri.host == "[2001:db8::7]");
         CHECK(uri.port.empty());
         CHECK(uri.path == "c=GB");
         CHECK(uri.query == "objectClass?one");
@@ -267,7 +267,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
         CHECK(uri.scheme == "telnet");
         CHECK(uri.userinfo.empty());
-        CHECK(uri.host == "192.0.2.16"); // TODO, to fix, IP host should work
+        CHECK(uri.host == "192.0.2.16");
         CHECK(uri.port == "80");
         CHECK(uri.path == "/");
         CHECK(uri.query.empty());

@@ -241,14 +241,17 @@ static curi_status parse_sub_delims(curi_handle handle, const char* uri, size_t 
     }
 }
 
-static curi_status parse_userinfo(curi_handle handle, const char* uri, size_t len, size_t* offset)
+static curi_status parse_userinfo_ant_at(curi_handle handle, const char* uri, size_t len, size_t* offset)
 {
+    // userinfo_and_at = userinfo "@"
     // userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
     const size_t initialOffset = *offset;
+    size_t afterUserinfoOffset;
+    curi_status status;
 
     while (1)
     {
-        curi_status status = curi_status_error;
+        status = curi_status_error;
         if (status == curi_status_error)
             TRY(status, offset, parse_unreserved(handle, uri, len, offset));
 
@@ -264,16 +267,23 @@ static curi_status parse_userinfo(curi_handle handle, const char* uri, size_t le
         if (status == curi_status_error)
         {
             // end of uri reached
-            if (handle->callbacks.userinfo)
-            {
-                if (handle->callbacks.userinfo(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
-                {
-                    return curi_status_canceled;
-                }
-            }
-            return curi_status_success;
+            break;
         }
     }
+
+    afterUserinfoOffset = *offset;
+    
+    status = parse_char(handle, '@', uri, len, offset);
+
+    if (status == curi_status_success && handle->callbacks.userinfo)
+    {
+        if (handle->callbacks.userinfo(handle->userData, uri + initialOffset, afterUserinfoOffset - initialOffset) == 0)
+        {
+            status = curi_status_canceled;
+        }
+    }
+
+    return status;
 }
 
 static curi_status parse_reg_name(curi_handle handle, const char* uri, size_t len, size_t* offset)
@@ -415,24 +425,12 @@ static curi_status parse_port(curi_handle handle, const char* uri, size_t len, s
 
 static curi_status parse_authority(curi_handle handle, const char* uri, size_t len, size_t* offset)
 {
-    // authority = [ userinfo "@" ] host [ ":" port ]
+    // authority = [ userinfo_and_at ] host [ ":" port ]
 
     curi_status status = curi_status_success;
 
     if (status == curi_status_success)
-    {
-        size_t subOffset = *offset;
-        curi_status subStatus = curi_status_success;
-        if (subStatus == curi_status_success)
-            subStatus = parse_userinfo(handle, uri, len, &subOffset);
-        if (subStatus == curi_status_success)
-            subStatus = parse_char(handle, '@', uri, len, &subOffset);
-        if (subStatus == curi_status_success)
-        {
-            *offset = subOffset;
-            status = subStatus;
-        }
-    }
+        TRY(status, offset, parse_userinfo_ant_at(handle, uri, len, offset));
 
     if (status == curi_status_success)
         status = parse_host(handle, uri, len, offset);
