@@ -22,7 +22,6 @@
 
 #include <assert.h>
 #include <ctype.h>
-
 #include <string.h>
 
 struct curi_handle_t 
@@ -74,12 +73,12 @@ static const char* read_char(const char* uri, size_t len, size_t* offset)
 
 #define TRY(status, offset, parse_fun_call) \
 { \
-    size_t initialOffset = *offset; \
-    curi_status tryStatus = parse_fun_call; \
-    if (tryStatus == curi_status_error) \
-        *offset = initialOffset; \
+    size_t __TRY_initialOffset = *offset; \
+    curi_status __TRY_tryStatus = parse_fun_call; \
+    if (__TRY_tryStatus == curi_status_error) \
+        *offset = __TRY_initialOffset; \
     else \
-        status = tryStatus; \
+        status = __TRY_tryStatus; \
 } \
 
 static curi_status parse_alpha(curi_handle handle, const char* uri, size_t len, size_t* offset)
@@ -320,7 +319,7 @@ static curi_status parse_dec_octet(curi_handle handle, const char* uri, size_t l
     int number;
     char numberStr[4] = {'\0', '\0', '\0', '\0'};
     size_t previousOffset;
-    int i;
+    size_t i;
 
     for (i = 0 ; i < 3 ; ++i)
     {
@@ -369,6 +368,204 @@ static curi_status parse_IPv4address(curi_handle handle, const char* uri, size_t
     return status;
 }
 
+static curi_status parse_h16(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // h16 = 1*4HEXDIG
+    curi_status status = curi_status_success;
+    size_t i;
+
+    if (status == curi_status_success)
+        status = parse_hexdigit(handle, uri, len, offset);
+
+    for (i = 0 ; i < 3 ; ++i)
+        TRY(status,offset,parse_hexdigit(handle, uri, len, offset));
+
+    return status;
+}
+
+static curi_status parse_h16_and_colon(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // h16_and_colon = h16 ":"
+    curi_status status = curi_status_success;
+
+    if (status == curi_status_success)
+        status = parse_h16(handle, uri, len, offset);
+
+    if (status == curi_status_success)
+        status = parse_char(handle, ':', uri, len, offset);
+
+    return status;
+}
+
+static curi_status parse_ls32(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // ls32 = ( h16 ":" h16 ) / IPv4address
+    curi_status status = curi_status_error;
+
+    if (status == curi_status_error)
+    {
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_success;
+
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_h16(handle, uri, len, offset);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_char(handle, ':', uri, len, offset);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_h16(handle, uri, len, offset);
+
+        if (tryStatus == curi_status_error)
+            *offset = initialOffset;
+        else
+            status = tryStatus;
+    }
+
+    if (status == curi_status_error)
+        TRY(status,offset,parse_IPv4address(handle, uri, len, offset));
+
+    return status;
+}
+
+static curi_status parse_IPv6address(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // IPv6address =                            6( h16 ":" ) ls32
+    //             /                       "::" 5( h16 ":" ) ls32
+    //             / [               h16 ] "::" 4( h16 ":" ) ls32
+    //             / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+    //             / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+    //             / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+    //             / [ *4( h16 ":" ) h16 ] "::"              ls32
+    //             / [ *5( h16 ":" ) h16 ] "::"              h16
+    //             / [ *6( h16 ":" ) h16 ] "::"
+
+    // Let's simplify it to [ (":" / 1*7(h16_and_colon)) ":"] ( (0*6(h16_and_colon) ls32) / h16 )
+
+    curi_status status = curi_status_success;
+
+    if (status == curi_status_success)
+    {
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_error;
+
+        if (tryStatus == curi_status_error)
+            TRY(tryStatus,offset,parse_char(handle, ':', uri, len, offset));
+
+        if (tryStatus == curi_status_error)
+        {
+            size_t i;
+            tryStatus = curi_status_success;
+
+            if (tryStatus == curi_status_success)
+                tryStatus = parse_h16_and_colon(handle, uri, len, offset);
+
+            for (i = 0 ; i < 6 ; ++i)
+                TRY(tryStatus,offset,parse_h16_and_colon(handle, uri, len, offset));
+        }
+
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_char(handle, ':', uri, len, offset);
+
+        if (tryStatus == curi_status_error)
+            *offset = initialOffset;
+        else
+            status = tryStatus;
+    }
+    
+    if (status == curi_status_success)
+    {
+        status = curi_status_error;
+
+        if (status == curi_status_error)
+        {
+            size_t initialOffset = *offset;
+            curi_status tryStatus = curi_status_success;
+            size_t i;
+            for (i = 0 ; i < 6 ; ++i)
+                TRY(tryStatus,offset,parse_h16_and_colon(handle, uri, len, offset));
+
+            if (tryStatus == curi_status_success)
+                tryStatus = parse_ls32(handle, uri, len, offset);
+
+            if (tryStatus == curi_status_error)
+                *offset = initialOffset;
+            else
+                status = tryStatus;
+        }
+
+        if (status == curi_status_error)
+            TRY(status,offset,parse_h16(handle, uri, len, offset));
+    }
+
+    return status;
+}
+
+static curi_status parse_IPvFuture(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // IPvFuture     = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+    curi_status status = curi_status_success;
+
+    if (status == curi_status_success)
+        status = parse_char(handle, 'v', uri, len, offset);
+    if (status == curi_status_success)
+        status = parse_hexdigit(handle, uri, len, offset);
+    if (status == curi_status_success)
+        status = parse_char(handle, '.', uri, len, offset);
+    if (status == curi_status_success)
+    {
+        status = curi_status_error;
+        if (status == curi_status_error)
+            TRY(status,offset,parse_unreserved(handle, uri, len, offset));
+        if (status == curi_status_error)
+            TRY(status,offset,parse_sub_delims(handle, uri, len, offset));
+        if (status == curi_status_error)
+            TRY(status,offset,parse_char(handle, ':', uri, len, offset));
+
+        while(status == curi_status_success)
+        {
+            status = curi_status_error;
+            if (status == curi_status_error)
+                TRY(status,offset,parse_unreserved(handle, uri, len, offset));
+            if (status == curi_status_error)
+                TRY(status,offset,parse_sub_delims(handle, uri, len, offset));
+            if (status == curi_status_error)
+                TRY(status,offset,parse_char(handle, ':', uri, len, offset));
+            if (status == curi_status_error)
+            {
+                status = curi_status_success;
+                break;
+            }
+        }
+
+    }
+
+    return status;
+}
+
+static curi_status parse_IP_literal(curi_handle handle, const char* uri, size_t len, size_t* offset)
+{
+    // IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
+    curi_status status = curi_status_success;
+
+    if (status == curi_status_success)
+        status = parse_char(handle, '[', uri, len, offset);
+
+    if (status == curi_status_success)
+    {
+        status = curi_status_error;
+
+        if (status == curi_status_error)
+            TRY(status, offset, parse_IPv6address(handle, uri, len, offset));
+
+        if (status == curi_status_error)
+            TRY(status, offset, parse_IPvFuture(handle, uri, len, offset));
+    }
+
+    if (status == curi_status_success)
+        status = parse_char(handle, ']', uri, len, offset);
+
+    return status;
+}
+
 static curi_status parse_host(curi_handle handle, const char* uri, size_t len, size_t* offset)
 {
     // host = IP-literal / IPv4address / reg-name
@@ -376,13 +573,13 @@ static curi_status parse_host(curi_handle handle, const char* uri, size_t len, s
     curi_status status = curi_status_error;
 
     if (status == curi_status_error)
-        TRY(status, offset, parse_reg_name(handle, uri, len, offset));
-
-    /*if (status == curi_status_error)
-        TRY(status, offset, parse_IP_literal(handle, uri, len, offset));*/
+        TRY(status, offset, parse_IP_literal(handle, uri, len, offset));
     
     if (status == curi_status_error)
         TRY(status, offset, parse_IPv4address(handle, uri, len, offset));
+
+    if (status == curi_status_error)
+        TRY(status, offset, parse_reg_name(handle, uri, len, offset));
 
     if (status == curi_status_success)
     {

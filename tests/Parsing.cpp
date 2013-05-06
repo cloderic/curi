@@ -209,7 +209,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
         CHECK(uri.userinfo.empty());
         CHECK(uri.host == "[2001:db8::7]");
         CHECK(uri.port.empty());
-        CHECK(uri.path == "c=GB");
+        CHECK(uri.path == "/c=GB");
         CHECK(uri.query == "objectClass?one");
         CHECK(uri.fragment.empty());
     }

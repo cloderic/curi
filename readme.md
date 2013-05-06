@@ -20,10 +20,10 @@ Additionally, it is continuously integrated on [Travis CI](https://travis-ci.org
 ## TODO ##
 
 - More unit tests (especially failing unit tests)
-- Supporting IP host (e.g. 192.168.0.1)
 - Handle relative URI (i.e. schemeless URI)
 - Handle path segments callbacks
 - Handle query key/value callbacks
 - Add on-demand url decoding
 - Performance tests and tweaking
+- Strict enforcing of IPv6 grammar rule
 
