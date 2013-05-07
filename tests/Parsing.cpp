@@ -122,24 +122,23 @@ int fragment(void* userData, const char* fragment, size_t fragmentLen)
 
 TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 {
-    curi_callbacks callbacks;
-    memset(&callbacks,0,sizeof(callbacks));
-    callbacks.scheme_callback = scheme;
-    callbacks.userinfo_callback = userinfo;
-    callbacks.host_callback = host;
-    callbacks.port_callback = port;
-    callbacks.path_callback = path;
-    callbacks.query_callback = query;
-    callbacks.fragment_callback = fragment;
+    curi_settings settings;
+    curi_default_settings(&settings);
+    settings.scheme_callback = scheme;
+    settings.userinfo_callback = userinfo;
+    settings.host_callback = host;
+    settings.port_callback = port;
+    settings.path_callback = path;
+    settings.query_callback = query;
+    settings.fragment_callback = fragment;
 
     URI uri;
-    curi_handle curi = curi_alloc(&callbacks,&uri);
 
     SECTION("Simple", "")
     {
         const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "foo");
         CHECK(uri.userinfo == "bar");
@@ -156,7 +155,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("file:///foo.xml");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "file");
         CHECK(uri.userinfo.empty());
@@ -173,7 +172,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("ftp://ftp.is.co.za/rfc/rfc1808.txt");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "ftp");
         CHECK(uri.userinfo.empty());
@@ -188,7 +187,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("http://www.ietf.org/rfc/rfc2396.txt");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "http");
         CHECK(uri.userinfo.empty());
@@ -203,7 +202,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("ldap://[2001:db8::7]/c=GB?objectClass?one");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "ldap");
         CHECK(uri.userinfo.empty());
@@ -218,7 +217,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("mailto:John.Doe@example.com");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "mailto");
         CHECK(uri.userinfo.empty());
@@ -233,7 +232,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("news:comp.infosystems.www.servers.unix");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "news");
         CHECK(uri.userinfo.empty());
@@ -248,7 +247,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("tel:+1-816-555-1212");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "tel");
         CHECK(uri.userinfo.empty());
@@ -263,7 +262,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("telnet://192.0.2.16:80/");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "telnet");
         CHECK(uri.userinfo.empty());
@@ -278,7 +277,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     {
         const std::string uriStr("urn:oasis:names:specification:docbook:dtd:xml:4.1.2");
         
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "urn");
         CHECK(uri.userinfo.empty());
@@ -288,24 +287,21 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
     }
-
-    curi_free(curi);
 };
 
 TEST_CASE("Parsing/Success/Scheme", "Valid URIs, scheme focus")
 {
-    curi_callbacks callbacks;
-    memset(&callbacks,0,sizeof(callbacks));
-    callbacks.scheme_callback = scheme;
+    curi_settings settings;
+    curi_default_settings(&settings);
+    settings.scheme_callback = scheme;
 
     URI uri;
-    curi_handle curi = curi_alloc(&callbacks,&uri);
 
     SECTION("NumberInScheme", "")
     {
         const std::string uriStr("ssh2:my/taylor/is/rich");
 
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "ssh2");
     }
@@ -314,33 +310,31 @@ TEST_CASE("Parsing/Success/Scheme", "Valid URIs, scheme focus")
     {
         const std::string uriStr("foo+bar:yeepee");
 
-        CHECK(curi_status_success == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "foo+bar");
     }
-    curi_free(curi);
 }
 
 TEST_CASE("Parsing/Error/Scheme", "Bad URIs, scheme focus")
 {
-    curi_callbacks callbacks;
-    memset(&callbacks,0,sizeof(callbacks));
+    curi_settings settings;
+    curi_default_settings(&settings);
 
     URI uri;
-    curi_handle curi = curi_alloc(&callbacks,&uri);
 
     SECTION("StartingWithNumber", "")
     {
         const std::string uriStr("3ftp://hello.org");
         
-        CHECK(curi_status_error == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_error == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
     }
 
     SECTION("Ampersand", "")
     {
         const std::string uriStr("bar&foo://google.com");
 
-        CHECK(curi_status_error == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_error == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme.empty());
     }
@@ -349,12 +343,10 @@ TEST_CASE("Parsing/Error/Scheme", "Bad URIs, scheme focus")
     {
         const std::string uriStr("bar??://google.com");
 
-        CHECK(curi_status_error == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
+        CHECK(curi_status_error == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme.empty());
     }
-
-    curi_free(curi);
 }
 
 extern "C"
@@ -368,17 +360,13 @@ TEST_CASE("Parsing/Cancelled", "Canceled parsing of URI")
 {
     SECTION("Scheme", "")
     {
-        curi_callbacks callbacks;
-        memset(&callbacks,0,sizeof(callbacks));
-        callbacks.scheme_callback = cancellingCallback;
-
-        curi_handle curi = curi_alloc(&callbacks,NULL);
+        curi_settings settings;
+        curi_default_settings(&settings);
+        settings.scheme_callback = cancellingCallback;
 
         const std::string uriStr("http://google.com");
         
-        CHECK(curi_status_canceled == curi_parse_full_uri(curi,uriStr.c_str(),uriStr.length()));
-
-        curi_free(curi);
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
     }
 }
 

@@ -27,9 +27,6 @@
 extern "C" {
 #endif
 
-/** an opaque handle to a parser */
-typedef struct curi_handle_t* curi_handle;
-
 /** error codes returned from this interface */
 typedef enum 
 {
@@ -47,13 +44,11 @@ typedef struct
     int (*path_callback)(void* userData, const char* path, size_t pathLen);
     int (*query_callback)(void* userData, const char* query, size_t queryLen);
     int (*fragment_callback)(void* userData, const char* fragment, size_t fragmentLen);
-} curi_callbacks;
+} curi_settings;
 
-curi_handle curi_alloc(const curi_callbacks* callbacks, void* userData);
+void curi_default_settings(curi_settings* settings);
 
-void curi_free(curi_handle handle);
-
-curi_status curi_parse_full_uri(curi_handle handle, const char* uri, size_t len);
+curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
 #ifdef __cplusplus
 }

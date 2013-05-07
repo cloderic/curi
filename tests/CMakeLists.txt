@@ -3,7 +3,7 @@ include_directories(
     catch
 )
 
-add_executable(curi_tests Framework.cpp Parsing.cpp)
+add_executable(curi_tests Settings.cpp Parsing.cpp)
 
 target_link_libraries(curi_tests curi)
 
