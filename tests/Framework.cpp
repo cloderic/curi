@@ -87,13 +87,13 @@ TEST_CASE("Framework/AllocFree/Callback", "curi_alloc and curi_free testing")
     SECTION("Full Callback", "")
     {
         curi_callbacks callbacks;
-        callbacks.scheme = callback;
-        callbacks.userinfo = callback;
-        callbacks.host = callback;
-        callbacks.port = callback;
-        callbacks.path = callback;
-        callbacks.query = callback;
-        callbacks.fragment = callback;
+        callbacks.scheme_callback = callback;
+        callbacks.userinfo_callback = callback;
+        callbacks.host_callback = callback;
+        callbacks.port_callback = callback;
+        callbacks.path_callback = callback;
+        callbacks.query_callback = callback;
+        callbacks.fragment_callback = callback;
 
         curi_handle curi = curi_alloc(&callbacks,&userData);
 

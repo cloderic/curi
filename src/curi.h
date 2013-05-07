@@ -40,20 +40,20 @@ typedef enum
 
 typedef struct 
 {
-    int (*scheme)(void* userData, const char* scheme, size_t schemeLen);
-    int (*userinfo)(void* userData, const char* userinfo, size_t userinfoLen);
-    int (*host)(void* userData, const char* host, size_t hostLen);
-    int (*port)(void* userData, const char* port, size_t portLen);
-    int (*path)(void* userData, const char* path, size_t pathLen);
-    int (*query)(void* userData, const char* query, size_t queryLen);
-    int (*fragment)(void* userData, const char* fragment, size_t fragmentLen);
+    int (*scheme_callback)(void* userData, const char* scheme, size_t schemeLen);
+    int (*userinfo_callback)(void* userData, const char* userinfo, size_t userinfoLen);
+    int (*host_callback)(void* userData, const char* host, size_t hostLen);
+    int (*port_callback)(void* userData, const char* port, size_t portLen);
+    int (*path_callback)(void* userData, const char* path, size_t pathLen);
+    int (*query_callback)(void* userData, const char* query, size_t queryLen);
+    int (*fragment_callback)(void* userData, const char* fragment, size_t fragmentLen);
 } curi_callbacks;
 
 curi_handle curi_alloc(const curi_callbacks* callbacks, void* userData);
 
 void curi_free(curi_handle handle);
 
-curi_status curi_parse(curi_handle handle, const char* uri, size_t len);
+curi_status curi_parse_full_uri(curi_handle handle, const char* uri, size_t len);
 
 #ifdef __cplusplus
 }

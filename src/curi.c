@@ -138,9 +138,9 @@ static curi_status parse_scheme(curi_handle handle, const char* uri, size_t len,
             {
                 // end of scheme reached
                 status = curi_status_success;
-                if (handle->callbacks.scheme)
+                if (handle->callbacks.scheme_callback)
                 {
-                    if (handle->callbacks.scheme(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+                    if (handle->callbacks.scheme_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
                     {
                         status = curi_status_canceled;
                     }
@@ -274,9 +274,9 @@ static curi_status parse_userinfo_ant_at(curi_handle handle, const char* uri, si
     
     status = parse_char(handle, '@', uri, len, offset);
 
-    if (status == curi_status_success && handle->callbacks.userinfo)
+    if (status == curi_status_success && handle->callbacks.userinfo_callback)
     {
-        if (handle->callbacks.userinfo(handle->userData, uri + initialOffset, afterUserinfoOffset - initialOffset) == 0)
+        if (handle->callbacks.userinfo_callback(handle->userData, uri + initialOffset, afterUserinfoOffset - initialOffset) == 0)
         {
             status = curi_status_canceled;
         }
@@ -583,9 +583,9 @@ static curi_status parse_host(curi_handle handle, const char* uri, size_t len, s
 
     if (status == curi_status_success)
     {
-        if (handle->callbacks.host)
+        if (handle->callbacks.host_callback)
         {
-            if (handle->callbacks.host(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+            if (handle->callbacks.host_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
             {
                 return curi_status_canceled;
             }
@@ -610,9 +610,9 @@ static curi_status parse_port(curi_handle handle, const char* uri, size_t len, s
             break;
     }
 
-    if (handle->callbacks.port)
+    if (handle->callbacks.port_callback)
     {
-        if (handle->callbacks.port(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+        if (handle->callbacks.port_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
         {
             return curi_status_canceled;
         }
@@ -732,9 +732,9 @@ static curi_status parse_path_abempty(curi_handle handle, const char* uri, size_
 
     curi_status status = parse_segments(handle,uri,len,offset);
 
-    if (handle->callbacks.path)
+    if (handle->callbacks.path_callback)
     {
-        if (handle->callbacks.path(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+        if (handle->callbacks.path_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
         {
             status = curi_status_canceled;
         }
@@ -784,9 +784,9 @@ static curi_status parse_path_absolute(curi_handle handle, const char* uri, size
         }
     }
 
-    if (status == curi_status_success && handle->callbacks.path)
+    if (status == curi_status_success && handle->callbacks.path_callback)
     {
-        if (handle->callbacks.path(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+        if (handle->callbacks.path_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
         {
             status = curi_status_canceled;
         }
@@ -820,9 +820,9 @@ static curi_status parse_path_rootless(curi_handle handle, const char* uri, size
         }
     }
 
-    if (status == curi_status_success && handle->callbacks.path)
+    if (status == curi_status_success && handle->callbacks.path_callback)
     {
-        if (handle->callbacks.path(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+        if (handle->callbacks.path_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
         {
             status = curi_status_canceled;
         }
@@ -907,9 +907,9 @@ static curi_status parse_query(curi_handle handle, const char* uri, size_t len, 
 
     curi_status status = parse_query_or_fragment(handle, uri, len, offset);
 
-    if (status == curi_status_success && handle->callbacks.query)
+    if (status == curi_status_success && handle->callbacks.query_callback)
     {
-        if (handle->callbacks.query(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+        if (handle->callbacks.query_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
         {
             status = curi_status_canceled;
         }
@@ -924,9 +924,9 @@ static curi_status parse_fragment(curi_handle handle, const char* uri, size_t le
 
     curi_status status = parse_query_or_fragment(handle, uri, len, offset);
 
-    if (status == curi_status_success && handle->callbacks.fragment)
+    if (status == curi_status_success && handle->callbacks.fragment_callback)
     {
-        if (handle->callbacks.fragment(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
+        if (handle->callbacks.fragment_callback(handle->userData, uri + initialOffset, *offset - initialOffset) == 0)
         {
             status = curi_status_canceled;
         }
@@ -981,7 +981,7 @@ static curi_status parse_uri(curi_handle handle, const char* uri, size_t len, si
 
     return status;
 }
-curi_status curi_parse(curi_handle handle, const char* uri, size_t len)
+curi_status curi_parse_full_uri(curi_handle handle, const char* uri, size_t len)
 {
     size_t offset = 0;
     curi_status status = parse_uri(handle,uri,len,&offset);
