@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <string.h>
 
 void curi_default_settings(curi_settings* settings)
@@ -970,10 +971,15 @@ curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings
         status = parse_full_uri(uri, len, &offset, &defaultSettings, userData); 
     }
 
-    if (status == curi_status_success && offset < len)
+    if (status == curi_status_success && *read_char(uri,len,&offset) != '\0')
         // the URI weren't fully consumed
         // TODO: set an error string somewhere
         status = curi_status_error;
 
     return status; 
+}
+
+curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
+{
+    return curi_parse_full_uri(uri, SIZE_MAX, settings, userData);
 }

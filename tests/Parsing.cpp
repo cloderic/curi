@@ -137,8 +137,54 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     SECTION("Simple", "")
     {
         const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+
+        CHECK(curi_status_success == curi_parse_full_uri_nt(uriStr.c_str(), &settings, &uri));
+
+        CHECK(uri.scheme == "foo");
+        CHECK(uri.userinfo == "bar");
+        CHECK(uri.host == "example.com");
+        CHECK(uri.port == "8042");
+        CHECK(uri.path == "/over/there");
+        CHECK(uri.query == "name=ferret");
+        CHECK(uri.fragment == "nose");
+    }
+
+    SECTION("Simple_Len", "")
+    {
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
         
         CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+
+        CHECK(uri.scheme == "foo");
+        CHECK(uri.userinfo == "bar");
+        CHECK(uri.host == "example.com");
+        CHECK(uri.port == "8042");
+        CHECK(uri.path == "/over/there");
+        CHECK(uri.query == "name=ferret");
+        CHECK(uri.fragment == "nose");
+    }
+
+    SECTION("Simple_BadLen", "")
+    {
+        const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length() * 100, &settings, &uri));
+
+        CHECK(uri.scheme == "foo");
+        CHECK(uri.userinfo == "bar");
+        CHECK(uri.host == "example.com");
+        CHECK(uri.port == "8042");
+        CHECK(uri.path == "/over/there");
+        CHECK(uri.query == "name=ferret");
+        CHECK(uri.fragment == "nose");
+    }
+
+    SECTION("Simple_NotNullTerminated", "")
+    {
+        const char* uriStr("foo://bar@example.com:8042/over/there?name=ferret#nosenoisynoisewedontcareabout");
+        size_t actualLen = strlen("foo://bar@example.com:8042/over/there?name=ferret#nose");
+
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr, actualLen, &settings, &uri));
 
         CHECK(uri.scheme == "foo");
         CHECK(uri.userinfo == "bar");
@@ -153,9 +199,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("LocalFile", "")
     {
-        const std::string uriStr("file:///foo.xml");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("file:///foo.xml", &settings, &uri));
 
         CHECK(uri.scheme == "file");
         CHECK(uri.userinfo.empty());
@@ -170,9 +214,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_1", "RFC's example #1")
     {
-        const std::string uriStr("ftp://ftp.is.co.za/rfc/rfc1808.txt");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("ftp://ftp.is.co.za/rfc/rfc1808.txt", &settings, &uri));
 
         CHECK(uri.scheme == "ftp");
         CHECK(uri.userinfo.empty());
@@ -185,9 +227,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_2", "RFC's example #2")
     {
-        const std::string uriStr("http://www.ietf.org/rfc/rfc2396.txt");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("http://www.ietf.org/rfc/rfc2396.txt", &settings, &uri));
 
         CHECK(uri.scheme == "http");
         CHECK(uri.userinfo.empty());
@@ -200,9 +240,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_3", "RFC's example #3")
     {
-        const std::string uriStr("ldap://[2001:db8::7]/c=GB?objectClass?one");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("ldap://[2001:db8::7]/c=GB?objectClass?one", &settings, &uri));
 
         CHECK(uri.scheme == "ldap");
         CHECK(uri.userinfo.empty());
@@ -215,9 +253,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_4", "RFC's example #4")
     {
-        const std::string uriStr("mailto:John.Doe@example.com");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("mailto:John.Doe@example.com", &settings, &uri));
 
         CHECK(uri.scheme == "mailto");
         CHECK(uri.userinfo.empty());
@@ -230,9 +266,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_5", "RFC's example #5")
     {
-        const std::string uriStr("news:comp.infosystems.www.servers.unix");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("news:comp.infosystems.www.servers.unix", &settings, &uri));
 
         CHECK(uri.scheme == "news");
         CHECK(uri.userinfo.empty());
@@ -245,9 +279,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_6", "RFC's example #6")
     {
-        const std::string uriStr("tel:+1-816-555-1212");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("tel:+1-816-555-1212", &settings, &uri));
 
         CHECK(uri.scheme == "tel");
         CHECK(uri.userinfo.empty());
@@ -260,9 +292,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_7", "RFC's example #7")
     {
-        const std::string uriStr("telnet://192.0.2.16:80/");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("telnet://192.0.2.16:80/", &settings, &uri));
 
         CHECK(uri.scheme == "telnet");
         CHECK(uri.userinfo.empty());
@@ -275,9 +305,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
 
     SECTION("RFC_8", "RFC's example #8")
     {
-        const std::string uriStr("urn:oasis:names:specification:docbook:dtd:xml:4.1.2");
-        
-        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+        CHECK(curi_status_success == curi_parse_full_uri_nt("urn:oasis:names:specification:docbook:dtd:xml:4.1.2", &settings, &uri));
 
         CHECK(uri.scheme == "urn");
         CHECK(uri.userinfo.empty());

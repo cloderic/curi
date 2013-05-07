@@ -46,8 +46,22 @@ typedef struct
     int (*fragment_callback)(void* userData, const char* fragment, size_t fragmentLen);
 } curi_settings;
 
+/** Set the given settings to their default value */
 void curi_default_settings(curi_settings* settings);
 
+/** Parse the given NULL-terminated string as a full URI 
+
+    \note This function doesn't do compute `strlen(uri)`, it calls `curi_parse_full_uri`
+    with a length set to SIZE_MAX.
+*/
+curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
+
+/** Parse the given string as a full URI specifying its length 
+
+    \note In practice the parsing ends once the given length is reached or a 
+    NULL-character ('\0') is read, making this function working for NULL-terminated 
+    string as well.
+*/
 curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
 #ifdef __cplusplus
