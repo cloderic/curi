@@ -120,7 +120,7 @@ int fragment(void* userData, const char* fragment, size_t fragmentLen)
     return 1;
 }
 
-TEST_CASE("Parsing/Success/Full", "Valid full URIs")
+TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
 {
     curi_settings settings;
     curi_default_settings(&settings);
@@ -317,7 +317,7 @@ TEST_CASE("Parsing/Success/Full", "Valid full URIs")
     }
 };
 
-TEST_CASE("Parsing/Success/Scheme", "Valid URIs, scheme focus")
+TEST_CASE("ParseFullUri/Success/Scheme", "Valid URIs, scheme focus")
 {
     curi_settings settings;
     curi_default_settings(&settings);
@@ -344,7 +344,7 @@ TEST_CASE("Parsing/Success/Scheme", "Valid URIs, scheme focus")
     }
 }
 
-TEST_CASE("Parsing/Error/Scheme", "Bad URIs, scheme focus")
+TEST_CASE("ParseFullUri/Error/Scheme", "Bad URIs, scheme focus")
 {
     curi_settings settings;
     curi_default_settings(&settings);
@@ -384,7 +384,7 @@ extern "C"
         return 0;
     }
 }
-TEST_CASE("Parsing/Cancelled", "Canceled parsing of URI")
+TEST_CASE("ParseFullUri/Cancelled", "Canceled parsing of URI")
 {
     SECTION("Scheme", "")
     {

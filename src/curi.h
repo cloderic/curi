@@ -64,6 +64,9 @@ curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* setting
 */
 curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
+
+curi_status curi_url_decode(const char* input, size_t inputLen, char* output, size_t outputCapacity, size_t* outputLen /*=0*/);
+
 #ifdef __cplusplus
 }
 #endif

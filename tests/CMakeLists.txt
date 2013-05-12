@@ -3,7 +3,7 @@ include_directories(
     catch
 )
 
-add_executable(curi_tests Settings.cpp Parsing.cpp)
+add_executable(curi_tests Settings.cpp ParseFullUri.cpp UrlDecode.cpp)
 
 target_link_libraries(curi_tests curi)
 
@@ -13,9 +13,13 @@ if(MSVC)
 endif()
 
 add_test(
-  NAME Framework 
-  COMMAND curi_tests -t Framework/*)
+  NAME Settings 
+  COMMAND curi_tests -t Settings/*)
 
 add_test(
-  NAME Parsing 
-  COMMAND curi_tests -t Parsing/*)
+  NAME ParseFullUri 
+  COMMAND curi_tests -t ParseFullUri/*)
+
+add_test(
+  NAME UrlDecode 
+  COMMAND curi_tests -t UrlDecode/*)

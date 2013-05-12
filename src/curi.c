@@ -45,10 +45,10 @@ static const char* read_char(const char* uri, size_t len, size_t* offset)
 
 #define TRY(status, offset, parse_fun_call) \
 { \
-    size_t __TRY_initialOffset = *offset; \
+    size_t __TRY_initialOffset = *(offset); \
     curi_status __TRY_tryStatus = parse_fun_call; \
     if (__TRY_tryStatus == curi_status_error) \
-        *offset = __TRY_initialOffset; \
+        *(offset) = __TRY_initialOffset; \
     else \
         status = __TRY_tryStatus; \
 } \
@@ -61,12 +61,27 @@ static curi_status parse_alpha(const char* uri, size_t len, size_t* offset, cons
         return curi_status_error;
 }
 
+#define CASE_DIGIT \
+    case '0': \
+    case '1': \
+    case '2': \
+    case '3': \
+    case '4': \
+    case '5': \
+    case '6': \
+    case '7': \
+    case '8': \
+    case '9'
+
 static curi_status parse_digit(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    if (isdigit(*read_char(uri,len,offset)))
-        return curi_status_success;
-    else
-        return curi_status_error;
+    switch (*read_char(uri,len,offset))
+    {
+        CASE_DIGIT:
+            return curi_status_success;
+        default:
+            return curi_status_error;
+    }  
 }
 
 static curi_status parse_char(char c, const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userDatat)
@@ -145,29 +160,29 @@ static curi_status parse_unreserved(const char* uri, size_t len, size_t* offset,
     }
 }
 
+#define CASE_HEXDIGIT \
+    CASE_DIGIT: \
+    case 'a': \
+    case 'b': \
+    case 'c': \
+    case 'd': \
+    case 'e': \
+    case 'f': \
+    case 'A': \
+    case 'B': \
+    case 'C': \
+    case 'D': \
+    case 'E': \
+    case 'F'
+
 static curi_status parse_hexdigit(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    const char* c = read_char(uri,len,offset);
-    switch (*c)
+    switch (*read_char(uri,len,offset))
     {
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'E':
-        case 'F':
+        CASE_HEXDIGIT:
             return curi_status_success;
         default:
-            if (isdigit(*c))
-                return curi_status_success;
-            else
-                return curi_status_error;
+            return curi_status_error;
     }
 }
 
@@ -982,4 +997,52 @@ curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings
 curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
 {
     return curi_parse_full_uri(uri, SIZE_MAX, settings, userData);
+}
+
+curi_status curi_url_decode(const char* input, size_t inputLen, char* output, size_t outputCapacity, size_t* outputLen /*=0*/)
+{
+    curi_status status = curi_status_error;
+    size_t inputOffset = 0;
+    size_t outputOffset = 0;
+
+    #define HEXTOI(x) (isdigit(x) ? x - '0' : tolower(x) - 'a' + 10)
+
+    while ( outputOffset < outputCapacity ) 
+    {
+        status = curi_status_error;
+        TRY(status, &inputOffset, parse_pct_encoded(input,inputLen,&inputOffset,0,0));
+
+        if (status == curi_status_success)
+        {
+            output[outputOffset] = ((HEXTOI(input[inputOffset - 2]) << 4) | HEXTOI(tolower(input[inputOffset - 1])));
+            ++outputOffset;
+        }
+        else
+        {
+            output[outputOffset] = *read_char(input, inputLen, &inputOffset);
+            if (output[outputOffset] == '\0')
+            {
+                if (outputLen)
+                    *outputLen = outputOffset;
+
+                return curi_status_success;
+            }
+            else
+            {
+                ++outputOffset;
+            }
+        }
+    }
+
+    if (*read_char(input, inputLen, &inputOffset) == '\0')
+    {
+        if (outputLen)
+            *outputLen = outputOffset;
+
+        return curi_status_success;
+    }
+    else
+    {
+        return curi_status_error;
+    }
 }
