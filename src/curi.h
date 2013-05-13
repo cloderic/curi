@@ -37,13 +37,14 @@ typedef enum
 
 typedef struct 
 {
-    int (*scheme_callback)(void* userData, const char* scheme, size_t schemeLen);
-    int (*userinfo_callback)(void* userData, const char* userinfo, size_t userinfoLen);
-    int (*host_callback)(void* userData, const char* host, size_t hostLen);
-    int (*port_callback)(void* userData, const char* port, size_t portLen);
-    int (*path_callback)(void* userData, const char* path, size_t pathLen);
-    int (*query_callback)(void* userData, const char* query, size_t queryLen);
-    int (*fragment_callback)(void* userData, const char* fragment, size_t fragmentLen);
+    int (*scheme_callback)(void* userData, const char* scheme, size_t schemeLen); //!< if not-NULL, called with the parsed scheme (default is NULL).
+    int (*userinfo_callback)(void* userData, const char* userinfo, size_t userinfoLen); //!< if not-NULL, called with the parsed userinfo (default is NULL).
+    int (*host_callback)(void* userData, const char* host, size_t hostLen); //!< if not-NULL, called with the parsed host (default is NULL).
+    int (*port_callback)(void* userData, const char* port, size_t portLen); //!< if not-NULL, called with the parsed port (default is NULL).
+    int (*path_callback)(void* userData, const char* path, size_t pathLen); //!< if not-NULL, called with the parsed path (default is NULL).
+    int (*query_callback)(void* userData, const char* query, size_t queryLen); //!< if not-NULL, called with the parsed query (default is NULL).
+    int (*fragment_callback)(void* userData, const char* fragment, size_t fragmentLen); //!< if not-NULL, called with the parsed fragment (default is NULL).
+    int url_decode; // if != 0, the string passed to the callbacks ae first url decoded, requiring the allocation of a temporary string.
 } curi_settings;
 
 /** Set the given settings to their default value */

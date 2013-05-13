@@ -315,6 +315,23 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
     }
+
+    SECTION("URL decoding", "Very url-encoded heavy URI")
+    {
+        settings.url_decode = 1;
+
+        CHECK(curi_status_success == curi_parse_full_uri_nt("http://some%20random%20dude@paren(thesis).org/brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D?don%27t+you+think#c%3A%5CProgram%20Files", &settings, &uri));
+
+        CHECK(uri.scheme == "http");
+        CHECK(uri.userinfo == "some random dude");
+        CHECK(uri.host == "paren(thesis).org");
+        CHECK(uri.port.empty());
+        CHECK(uri.path == "/brac[kets]:love{the|pipe}");
+        CHECK(uri.query == "don't you think");
+        CHECK(uri.fragment == "c:\\Program Files");
+
+        settings.url_decode = 0;
+    }
 };
 
 TEST_CASE("ParseFullUri/Success/Scheme", "Valid URIs, scheme focus")
@@ -341,6 +358,28 @@ TEST_CASE("ParseFullUri/Success/Scheme", "Valid URIs, scheme focus")
         CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "foo+bar");
+    }
+}
+
+TEST_CASE("ParseFullUri/Success/Path", "Valid URIs, path focus")
+{
+    curi_settings settings;
+    curi_default_settings(&settings);
+    settings.path_callback = path;
+
+    URI uri;
+
+    SECTION("UrlDecode", "")
+    {
+        settings.url_decode = 1;
+
+        const std::string uriStr("ftp://liz@taylor/is%20f%23%26ing%20very/rich");
+
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+
+        CHECK(uri.path == "/is f#&ing very/rich");
+
+        settings.url_decode = 0;
     }
 }
 

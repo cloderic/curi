@@ -30,6 +30,87 @@ void curi_default_settings(curi_settings* settings)
     memset(settings,0,sizeof(curi_settings));
 }
 
+static curi_status handle_str_callback(int (*callback)(void* userData, const char* str, size_t strLen), void* userData, const char* str, size_t strLen)
+{
+    curi_status status = curi_status_success;
+
+    if (callback && callback(userData,str,strLen) == 0)
+        status = curi_status_canceled;
+
+    return status;
+}
+
+static curi_status handle_str_callback_url_decoded(int (*callback)(void* userData, const char* str, size_t strLen), void* userData, const char* str, size_t strLen)
+{
+    curi_status status = curi_status_success;
+
+    if (callback)
+    {
+        size_t urlDecodedStrLen;
+        char* urlDecodedStr = (char*)malloc((strLen+1) * sizeof(char));
+            
+        status = curi_url_decode(str,strLen,urlDecodedStr,strLen+1,&urlDecodedStrLen);
+
+        if (status == curi_status_success)
+            if (callback(userData,urlDecodedStr,urlDecodedStrLen) == 0)
+                status =  curi_status_canceled;
+
+        free(urlDecodedStr);
+    }
+
+    return status;
+}
+
+static curi_status handle_scheme(const char* scheme, size_t schemeLen, const curi_settings* settings, void* userData)
+{
+    return handle_str_callback(settings->scheme_callback, userData, scheme, schemeLen);
+}
+
+static curi_status handle_userinfo(const char* userinfo, size_t userinfoLen, const curi_settings* settings, void* userData)
+{
+    if (settings->url_decode == 0)
+        return handle_str_callback(settings->userinfo_callback, userData, userinfo, userinfoLen);
+    else
+        return handle_str_callback_url_decoded(settings->userinfo_callback, userData, userinfo, userinfoLen);
+}
+
+static curi_status handle_host(const char* host, size_t hostLen, const curi_settings* settings, void* userData)
+{
+    if (settings->url_decode == 0)
+        return handle_str_callback(settings->host_callback, userData, host, hostLen);
+    else
+        return handle_str_callback_url_decoded(settings->host_callback, userData, host, hostLen);
+}
+
+static curi_status handle_port(const char* port, size_t portLen, const curi_settings* settings, void* userData)
+{
+    return handle_str_callback(settings->port_callback, userData, port, portLen);
+}
+
+static curi_status handle_path(const char* path, size_t pathLen, const curi_settings* settings, void* userData)
+{
+    if (settings->url_decode == 0)
+        return handle_str_callback(settings->path_callback, userData, path, pathLen);
+    else
+        return handle_str_callback_url_decoded(settings->path_callback, userData, path, pathLen);
+}
+
+static curi_status handle_query(const char* query, size_t queryLen, const curi_settings* settings, void* userData)
+{
+    if (settings->url_decode == 0)
+        return handle_str_callback(settings->query_callback, userData, query, queryLen);
+    else
+        return handle_str_callback_url_decoded(settings->query_callback, userData, query, queryLen);
+}
+
+static curi_status handle_fragment(const char* fragment, size_t fragmentLen, const curi_settings* settings, void* userData)
+{
+    if (settings->url_decode == 0)
+        return handle_str_callback(settings->fragment_callback, userData, fragment, fragmentLen);
+    else
+        return handle_str_callback_url_decoded(settings->fragment_callback, userData, fragment, fragmentLen);
+}
+
 static const char end = '\0';
 
 static const char* read_char(const char* uri, size_t len, size_t* offset)
@@ -124,14 +205,7 @@ static curi_status parse_scheme(const char* uri, size_t len, size_t* offset, con
             if (status == curi_status_error)
             {
                 // end of scheme reached
-                status = curi_status_success;
-                if (settings->scheme_callback)
-                {
-                    if (settings->scheme_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-                    {
-                        status = curi_status_canceled;
-                    }
-                }
+                status = handle_scheme(uri + initialOffset, *offset - initialOffset, settings, userData);
                 break;
             }
 
@@ -227,7 +301,7 @@ static curi_status parse_sub_delims(const char* uri, size_t len, size_t* offset,
     }
 }
 
-static curi_status parse_userinfo_ant_at(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+static curi_status parse_userinfo_and_at(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     // userinfo_and_at = userinfo "@"
     // userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
@@ -261,13 +335,8 @@ static curi_status parse_userinfo_ant_at(const char* uri, size_t len, size_t* of
     
     status = parse_char('@', uri, len, offset, settings, userData);
 
-    if (status == curi_status_success && settings->userinfo_callback)
-    {
-        if (settings->userinfo_callback(userData, uri + initialOffset, afterUserinfoOffset - initialOffset) == 0)
-        {
-            status = curi_status_canceled;
-        }
-    }
+    if (status == curi_status_success)
+        status = handle_userinfo(uri + initialOffset, afterUserinfoOffset - initialOffset, settings, userData);
 
     return status;
 }
@@ -569,15 +638,8 @@ static curi_status parse_host(const char* uri, size_t len, size_t* offset, const
         TRY(status, offset, parse_reg_name(uri, len, offset, settings, userData));
 
     if (status == curi_status_success)
-    {
-        if (settings->host_callback)
-        {
-            if (settings->host_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-            {
-                return curi_status_canceled;
-            }
-        }
-    }
+        status = handle_host(uri + initialOffset, *offset - initialOffset, settings, userData);
+
     return status;
 }
 
@@ -597,14 +659,7 @@ static curi_status parse_port(const char* uri, size_t len, size_t* offset, const
             break;
     }
 
-    if (settings->port_callback)
-    {
-        if (settings->port_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-        {
-            return curi_status_canceled;
-        }
-    }
-    return curi_status_success;
+    return handle_port(uri + initialOffset, *offset - initialOffset, settings, userData);
 }
 
 static curi_status parse_authority(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
@@ -614,7 +669,7 @@ static curi_status parse_authority(const char* uri, size_t len, size_t* offset, 
     curi_status status = curi_status_success;
 
     if (status == curi_status_success)
-        TRY(status, offset, parse_userinfo_ant_at(uri, len, offset, settings, userData));
+        TRY(status, offset, parse_userinfo_and_at(uri, len, offset, settings, userData));
 
     if (status == curi_status_success)
         status = parse_host(uri, len, offset, settings, userData);
@@ -719,13 +774,8 @@ static curi_status parse_path_abempty(const char* uri, size_t len, size_t* offse
 
     curi_status status = parse_segments(uri, len, offset, settings, userData);
 
-    if (settings->path_callback)
-    {
-        if (settings->path_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-        {
-            status = curi_status_canceled;
-        }
-    }
+    if (status == curi_status_success)
+        status = handle_path(uri + initialOffset, *offset - initialOffset, settings, userData);
 
     return status;
 }
@@ -771,13 +821,8 @@ static curi_status parse_path_absolute(const char* uri, size_t len, size_t* offs
         }
     }
 
-    if (status == curi_status_success && settings->path_callback)
-    {
-        if (settings->path_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-        {
-            status = curi_status_canceled;
-        }
-    }
+    if (status == curi_status_success)
+        status = handle_path(uri + initialOffset, *offset - initialOffset, settings, userData);
 
     return status;
 }
@@ -807,20 +852,15 @@ static curi_status parse_path_rootless(const char* uri, size_t len, size_t* offs
         }
     }
 
-    if (status == curi_status_success && settings->path_callback)
-    {
-        if (settings->path_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-        {
-            status = curi_status_canceled;
-        }
-    }
+    if (status == curi_status_success)
+        status = handle_path(uri + initialOffset, *offset - initialOffset, settings, userData);
 
     return status;
 }
 
 static curi_status parse_path_empty(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // path-empty = 0<pchar>
+    // path-empty = ""
     return curi_status_success;
 }
 
@@ -894,13 +934,8 @@ static curi_status parse_query(const char* uri, size_t len, size_t* offset, cons
 
     curi_status status = parse_query_or_fragment(uri, len, offset, settings, userData);
 
-    if (status == curi_status_success && settings->query_callback)
-    {
-        if (settings->query_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-        {
-            status = curi_status_canceled;
-        }
-    }
+    if (status == curi_status_success)
+        status = handle_query(uri + initialOffset, *offset - initialOffset, settings, userData);
 
     return status;
 }
@@ -911,13 +946,8 @@ static curi_status parse_fragment(const char* uri, size_t len, size_t* offset, c
 
     curi_status status = parse_query_or_fragment(uri, len, offset, settings, userData);
 
-    if (status == curi_status_success && settings->fragment_callback)
-    {
-        if (settings->fragment_callback(userData, uri + initialOffset, *offset - initialOffset) == 0)
-        {
-            status = curi_status_canceled;
-        }
-    }
+    if (status == curi_status_success)
+        status = handle_fragment(uri + initialOffset, *offset - initialOffset, settings, userData);
 
     return status;
 }
