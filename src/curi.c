@@ -1010,15 +1010,40 @@ curi_status curi_url_decode(const char* input, size_t inputLen, char* output, si
     while ( outputOffset < outputCapacity ) 
     {
         status = curi_status_error;
-        TRY(status, &inputOffset, parse_pct_encoded(input,inputLen,&inputOffset,0,0));
+        if (status == curi_status_error)
+        {
+            // percent encoding
+            TRY(status, &inputOffset, parse_pct_encoded(input, inputLen, &inputOffset, 0, 0));
 
-        if (status == curi_status_success)
-        {
-            output[outputOffset] = ((HEXTOI(input[inputOffset - 2]) << 4) | HEXTOI(tolower(input[inputOffset - 1])));
-            ++outputOffset;
+            if (status == curi_status_success)
+            {
+                int encodedChar = ((HEXTOI(input[inputOffset - 2]) << 4) | HEXTOI(tolower(input[inputOffset - 1])));
+                if (encodedChar < 128) // Only support ascii percent encodage at the moment.
+                {
+                    output[outputOffset] = (char)encodedChar;
+                    ++outputOffset;
+                }
+                else
+                {
+                    status = curi_status_error;
+                }
+            }
         }
-        else
+
+        if (status == curi_status_error)
         {
+            // '+' as a space
+            TRY(status, &inputOffset, parse_char('+', input, inputLen, &inputOffset, 0, 0));
+            if (status == curi_status_success)
+            {
+                 output[outputOffset] = ' ';
+                 ++outputOffset;
+            }
+        }
+
+        if (status == curi_status_error)
+        {
+            // "any" character
             output[outputOffset] = *read_char(input, inputLen, &inputOffset);
             if (output[outputOffset] == '\0')
             {
@@ -1045,4 +1070,9 @@ curi_status curi_url_decode(const char* input, size_t inputLen, char* output, si
     {
         return curi_status_error;
     }
+}
+
+curi_status curi_url_decode_nt(const char* input, char* output, size_t outputCapacity, size_t* outputLen /*=0*/)
+{
+    return curi_url_decode(input, SIZE_MAX, output, outputCapacity, outputLen);
 }

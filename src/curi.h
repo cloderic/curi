@@ -64,7 +64,25 @@ curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* setting
 */
 curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
+/** URL Decode the given string.
+    
+    - Percent decoding of ascii characters (from %00 to %1F) are supported
+    - as well as '+' standing for a space.
 
+    \note This function doesn't do compute `strlen(input)`, it calls `curi_url_decode`
+    with a length set to SIZE_MAX.
+*/
+curi_status curi_url_decode_nt(const char* input, char* output, size_t outputCapacity, size_t* outputLen /*=0*/);
+
+/** URL Decode the given string.
+    
+    - Percent decoding of ascii characters (from %00 to %1F) are supported
+    - as well as '+' standing for a space.
+
+    \note In practice the parsing ends once the given length is reached or a 
+    NULL-character ('\0') is read, making this function working for NULL-terminated 
+    string as well.
+*/
 curi_status curi_url_decode(const char* input, size_t inputLen, char* output, size_t outputCapacity, size_t* outputLen /*=0*/);
 
 #ifdef __cplusplus

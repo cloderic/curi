@@ -26,4 +26,6 @@ Additionally, it is continuously integrated on [Travis CI](https://travis-ci.org
 - Add on-demand url decoding
 - Performance tests and tweaking
 - Strict enforcing of IPv6 grammar rule
+- Make sure the [RFC errata](http://www.rfc-editor.org/errata_search.php?rfc=3986) are taken into account 
+- Handle non-ascii characters url decoding.
 

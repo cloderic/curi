@@ -31,10 +31,16 @@
 
 #include <cstring>
 
-// Reference taken from http://www.w3schools.com/tags/ref_urlencode.asp
-static const size_t referenceCount = 95;
-static const char* reference[referenceCount * 2] = {
-    " ","%20", 
+static const size_t asciiReferenceCount = 102;
+static const char* asciiReference[asciiReferenceCount * 2] = {
+    "\0","%00",
+    "\b","%08",
+    "\t","%09",
+    "\n","%0A",
+    "\v","%0B",
+    "\r","%0D",
+    " ","%20",
+    " ","+",
     "!","%21",
     "\"","%22",
     "#","%23", 
@@ -128,140 +134,16 @@ static const char* reference[referenceCount * 2] = {
     "{","%7B", 
     "|","%7C", 
     "}","%7D", 
-    "~","%7E",
-    /* 
-    "′","%80", 
-    "‚","%82", 
-    "ƒ","%83", 
-    "„","%84", 
-    "…","%85", 
-    "†","%86", 
-    "‡","%87", 
-    "ˆ","%88", 
-    "‰","%89", 
-    "Š","%8A", 
-    "‹","%8B", 
-    "Œ","%8C", 
-    "Ž","%8E", 
-    "‘","%91", 
-    "’","%92", 
-    "“","%93", 
-    "”","%94", 
-    "•","%95", 
-    "–","%96", 
-    "—","%97", 
-    "˜","%98", 
-    "™","%99", 
-    "š","%9A", 
-    "›","%9B", 
-    "œ","%9C", 
-    "ž","%9E", 
-    "Ÿ","%9F", 
-    " ","%A0", 
-    "¡","%A1", 
-    "¢","%A2", 
-    "£","%A3", 
-    "¤","%A4", 
-    "¥","%A5", 
-    "¦","%A6", 
-    "§","%A7", 
-    "¨","%A8", 
-    "©","%A9", 
-    "ª","%AA", 
-    "«","%AB", 
-    "¬","%AC", 
-    "®","%AE", 
-    "¯","%AF", 
-    "°","%B0", 
-    "±","%B1", 
-    "²","%B2", 
-    "³","%B3", 
-    "´","%B4", 
-    "µ","%B5", 
-    "¶","%B6", 
-    "·","%B7", 
-    "¸","%B8", 
-    "¹","%B9", 
-    "º","%BA", 
-    "»","%BB", 
-    "¼","%BC", 
-    "½","%BD", 
-    "¾","%BE", 
-    "¿","%BF", 
-    "À","%C0", 
-    "Á","%C1", 
-    "Â","%C2", 
-    "Ã","%C3", 
-    "Ä","%C4", 
-    "Å","%C5", 
-    "Æ","%C6", 
-    "Ç","%C7", 
-    "È","%C8", 
-    "É","%C9", 
-    "Ê","%CA", 
-    "Ë","%CB", 
-    "Ì","%CC", 
-    "Í","%CD", 
-    "Î","%CE", 
-    "Ï","%CF", 
-    "Ð","%D0", 
-    "Ñ","%D1", 
-    "Ò","%D2", 
-    "Ó","%D3", 
-    "Ô","%D4", 
-    "Õ","%D5", 
-    "Ö","%D6", 
-    "×","%D7", 
-    "Ø","%D8", 
-    "Ù","%D9", 
-    "Ú","%DA", 
-    "Û","%DB", 
-    "Ü","%DC", 
-    "Ý","%DD", 
-    "Þ","%DE", 
-    "ß","%DF", 
-    "à","%E0", 
-    "á","%E1", 
-    "â","%E2", 
-    "ã","%E3", 
-    "ä","%E4", 
-    "å","%E5", 
-    "æ","%E6", 
-    "ç","%E7", 
-    "è","%E8", 
-    "é","%E9", 
-    "ê","%EA", 
-    "ë","%EB", 
-    "ì","%EC", 
-    "í","%ED", 
-    "î","%EE", 
-    "ï","%EF", 
-    "ð","%F0", 
-    "ñ","%F1", 
-    "ò","%F2", 
-    "ó","%F3", 
-    "ô","%F4", 
-    "õ","%F5", 
-    "ö","%F6", 
-    "÷","%F7", 
-    "ø","%F8", 
-    "ù","%F9", 
-    "ú","%FA", 
-    "û","%FB", 
-    "ü","%FC", 
-    "ý","%FD", 
-    "þ","%FE", 
-    "ÿ","%FF"*/};
+    "~","%7E"};
 
 TEST_CASE("UrlDecode/Single", "Unit characters")
 {
-    char output[8];
-    memset(output,0,8*sizeof(char));
+    char output;
 
-    for (size_t i(0) ; i < referenceCount ; ++i)
+    for (size_t i(0) ; i < asciiReferenceCount ; ++i)
     {
-        std::string expectedOutput = reference[2*i];
-        std::string input = reference[2*i+1];
+        char expectedOutput = asciiReference[2*i][0];
+        std::string input = asciiReference[2*i+1];
 
         std::ostringstream oss;
         oss << i << ": " << input << "=" << expectedOutput; 
@@ -271,10 +153,58 @@ TEST_CASE("UrlDecode/Single", "Unit characters")
             
             CAPTURE(input);
 
-            CHECK(curi_url_decode(input.c_str(),input.length(),output,8,0) == curi_status_success);
+            CHECK(curi_url_decode(input.c_str(),input.length(),&output,1,0) == curi_status_success);
             CAPTURE(output);
             CHECK(expectedOutput == output);
         }
+    }
+}
+
+TEST_CASE("UrlDecode/Full", "Full url encoded strings")
+{
+    SECTION("Einstein","")
+    {
+        static const std::string input = "Two%20things%20are%20infinite%3A%20the%20universe%20and%20human%20stupidity%3B%20and%20I'm%20not%20sure%20about%20the%20the%20universe.";
+        static const std::string expectedOutput = "Two things are infinite: the universe and human stupidity; and I'm not sure about the the universe.";
+        char* output = new char[input.length()];
+
+        size_t outputLen;
+        CHECK(curi_url_decode(input.c_str(),input.length(),output,input.length(),&outputLen) == curi_status_success);
+        
+        CHECK(outputLen == expectedOutput.length());
+        CHECK(expectedOutput == std::string(output,outputLen));
+
+        delete[] output;
+    }
+
+    SECTION("Crowds control","")
+    {
+        static const std::string input = "http%3A%2F%2Fwww.crowdscontrol.net%2Fgroup-navigation-state-of-the-art-report%2F";
+        static const std::string expectedOutput = "http://www.crowdscontrol.net/group-navigation-state-of-the-art-report/";
+        char* output = new char[input.length()];
+
+        size_t outputLen;
+        CHECK(curi_url_decode_nt(input.c_str(),output,input.length(),&outputLen) == curi_status_success);
+        
+        CHECK(outputLen == expectedOutput.length());
+        CHECK(expectedOutput == std::string(output,outputLen));
+
+        delete[] output;
+    }
+
+    SECTION("42","")
+    {
+        static const std::string input = "Do+you+know+what+is+%22The+answer+to+life+the+universe+and+everything%22%3F";
+        static const std::string expectedOutput = "Do you know what is \"The answer to life the universe and everything\"?";
+        char* output = new char[input.length()];
+
+        size_t outputLen;
+        CHECK(curi_url_decode_nt(input.c_str(),output,input.length(),&outputLen) == curi_status_success);
+        
+        CHECK(outputLen == expectedOutput.length());
+        CHECK(expectedOutput == std::string(output,outputLen));
+
+        delete[] output;
     }
 }
 
