@@ -95,9 +95,21 @@ static curi_status handle_host(const char* host, size_t hostLen, const curi_sett
         return handle_str_callback_url_decoded(settings->host_callback, host, hostLen, settings, userData);
 }
 
-static curi_status handle_port(const char* port, size_t portLen, const curi_settings* settings, void* userData)
+static curi_status handle_port(const char* portStr, size_t portStrLen, const curi_settings* settings, void* userData)
 {
-    return handle_str_callback(settings->port_callback, port, portLen, settings, userData);
+    curi_status status = handle_str_callback(settings->portStr_callback, portStr, portStrLen, settings, userData);
+
+    if (status == curi_status_success)
+    {
+        if (settings->port_callback)
+        {
+            unsigned int value = atoi(portStr); // Should work because there is no number after the port in URIs
+            if(settings->port_callback(userData, value) == 0) 
+                status =  curi_status_canceled;
+        }
+    }
+
+    return status ;
 }
 
 static curi_status handle_path(const char* path, size_t pathLen, const curi_settings* settings, void* userData)

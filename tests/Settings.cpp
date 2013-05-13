@@ -41,7 +41,7 @@ TEST_CASE("Settings/Default", "default settings")
     CHECK(!settings.scheme_callback);
     CHECK(!settings.userinfo_callback);
     CHECK(!settings.host_callback);
-    CHECK(!settings.port_callback);
+    CHECK(!settings.portStr_callback);
     CHECK(!settings.path_callback);
     CHECK(!settings.query_callback);
     CHECK(!settings.fragment_callback);
