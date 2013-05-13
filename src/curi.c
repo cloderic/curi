@@ -46,7 +46,7 @@ static curi_status handle_str_callback(int (*callback)(void* userData, const cha
 {
     curi_status status = curi_status_success;
 
-    if (callback && callback(userData,str,strLen) == 0)
+    if (strLen > 0 && callback && callback(userData,str,strLen) == 0)
         status = curi_status_canceled;
 
     return status;
@@ -56,7 +56,7 @@ static curi_status handle_str_callback_url_decoded(int (*callback)(void* userDat
 {
     curi_status status = curi_status_success;
 
-    if (callback)
+    if (strLen > 0 && callback)
     {
         size_t allocationSize = (strLen+1) * sizeof(char);
         size_t urlDecodedStrLen;
@@ -101,7 +101,7 @@ static curi_status handle_port(const char* portStr, size_t portStrLen, const cur
 
     if (status == curi_status_success)
     {
-        if (settings->port_callback)
+        if (portStrLen > 0 && settings->port_callback)
         {
             unsigned int value = atoi(portStr); // Should work because there is no number after the port in URIs
             if(settings->port_callback(userData, value) == 0) 
