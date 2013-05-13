@@ -25,12 +25,24 @@
 #include <stdint.h>
 #include <string.h>
 
+static void* default_allocate(void* userData, size_t size)
+{
+    return malloc(size);
+}
+
+static void default_deallocate(void* userData, void* ptr, size_t size)
+{
+    free(ptr);
+}
+
 void curi_default_settings(curi_settings* settings)
 {
     memset(settings,0,sizeof(curi_settings));
+    settings->allocate = default_allocate;
+    settings->deallocate = default_deallocate;
 }
 
-static curi_status handle_str_callback(int (*callback)(void* userData, const char* str, size_t strLen), void* userData, const char* str, size_t strLen)
+static curi_status handle_str_callback(int (*callback)(void* userData, const char* str, size_t strLen), const char* str, size_t strLen, const curi_settings* settings, void* userData)
 {
     curi_status status = curi_status_success;
 
@@ -40,14 +52,15 @@ static curi_status handle_str_callback(int (*callback)(void* userData, const cha
     return status;
 }
 
-static curi_status handle_str_callback_url_decoded(int (*callback)(void* userData, const char* str, size_t strLen), void* userData, const char* str, size_t strLen)
+static curi_status handle_str_callback_url_decoded(int (*callback)(void* userData, const char* str, size_t strLen), const char* str, size_t strLen, const curi_settings* settings, void* userData)
 {
     curi_status status = curi_status_success;
 
     if (callback)
     {
+        size_t allocationSize = (strLen+1) * sizeof(char);
         size_t urlDecodedStrLen;
-        char* urlDecodedStr = (char*)malloc((strLen+1) * sizeof(char));
+        char* urlDecodedStr = (char*)settings->allocate(userData, allocationSize);
             
         status = curi_url_decode(str,strLen,urlDecodedStr,strLen+1,&urlDecodedStrLen);
 
@@ -55,7 +68,7 @@ static curi_status handle_str_callback_url_decoded(int (*callback)(void* userDat
             if (callback(userData,urlDecodedStr,urlDecodedStrLen) == 0)
                 status =  curi_status_canceled;
 
-        free(urlDecodedStr);
+        settings->deallocate(userData, urlDecodedStr, allocationSize);
     }
 
     return status;
@@ -63,52 +76,52 @@ static curi_status handle_str_callback_url_decoded(int (*callback)(void* userDat
 
 static curi_status handle_scheme(const char* scheme, size_t schemeLen, const curi_settings* settings, void* userData)
 {
-    return handle_str_callback(settings->scheme_callback, userData, scheme, schemeLen);
+    return handle_str_callback(settings->scheme_callback, scheme, schemeLen, settings, userData);
 }
 
 static curi_status handle_userinfo(const char* userinfo, size_t userinfoLen, const curi_settings* settings, void* userData)
 {
     if (settings->url_decode == 0)
-        return handle_str_callback(settings->userinfo_callback, userData, userinfo, userinfoLen);
+        return handle_str_callback(settings->userinfo_callback, userinfo, userinfoLen, settings, userData);
     else
-        return handle_str_callback_url_decoded(settings->userinfo_callback, userData, userinfo, userinfoLen);
+        return handle_str_callback_url_decoded(settings->userinfo_callback, userinfo, userinfoLen, settings, userData);
 }
 
 static curi_status handle_host(const char* host, size_t hostLen, const curi_settings* settings, void* userData)
 {
     if (settings->url_decode == 0)
-        return handle_str_callback(settings->host_callback, userData, host, hostLen);
+        return handle_str_callback(settings->host_callback, host, hostLen, settings, userData);
     else
-        return handle_str_callback_url_decoded(settings->host_callback, userData, host, hostLen);
+        return handle_str_callback_url_decoded(settings->host_callback, host, hostLen, settings, userData);
 }
 
 static curi_status handle_port(const char* port, size_t portLen, const curi_settings* settings, void* userData)
 {
-    return handle_str_callback(settings->port_callback, userData, port, portLen);
+    return handle_str_callback(settings->port_callback, port, portLen, settings, userData);
 }
 
 static curi_status handle_path(const char* path, size_t pathLen, const curi_settings* settings, void* userData)
 {
     if (settings->url_decode == 0)
-        return handle_str_callback(settings->path_callback, userData, path, pathLen);
+        return handle_str_callback(settings->path_callback, path, pathLen, settings, userData);
     else
-        return handle_str_callback_url_decoded(settings->path_callback, userData, path, pathLen);
+        return handle_str_callback_url_decoded(settings->path_callback, path, pathLen, settings, userData);
 }
 
 static curi_status handle_query(const char* query, size_t queryLen, const curi_settings* settings, void* userData)
 {
     if (settings->url_decode == 0)
-        return handle_str_callback(settings->query_callback, userData, query, queryLen);
+        return handle_str_callback(settings->query_callback, query, queryLen, settings, userData);
     else
-        return handle_str_callback_url_decoded(settings->query_callback, userData, query, queryLen);
+        return handle_str_callback_url_decoded(settings->query_callback, query, queryLen, settings, userData);
 }
 
 static curi_status handle_fragment(const char* fragment, size_t fragmentLen, const curi_settings* settings, void* userData)
 {
     if (settings->url_decode == 0)
-        return handle_str_callback(settings->fragment_callback, userData, fragment, fragmentLen);
+        return handle_str_callback(settings->fragment_callback, fragment, fragmentLen, settings, userData);
     else
-        return handle_str_callback_url_decoded(settings->fragment_callback, userData, fragment, fragmentLen);
+        return handle_str_callback_url_decoded(settings->fragment_callback, fragment, fragmentLen, settings, userData);
 }
 
 static const char end = '\0';

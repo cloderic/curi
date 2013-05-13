@@ -36,6 +36,8 @@ TEST_CASE("Settings/Default", "default settings")
     curi_settings settings;
     curi_default_settings(&settings);
 
+    CHECK(settings.allocate);
+    CHECK(settings.deallocate);
     CHECK(!settings.scheme_callback);
     CHECK(!settings.userinfo_callback);
     CHECK(!settings.host_callback);

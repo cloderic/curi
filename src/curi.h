@@ -37,6 +37,8 @@ typedef enum
 
 typedef struct 
 {
+    void* (*allocate)(void* userData, size_t size); //!< function used for memory allocation (default is based on malloc).
+    void (*deallocate)(void* userData, void* ptr, size_t size); //!< function used for memory deallocation (default is based on free).
     int (*scheme_callback)(void* userData, const char* scheme, size_t schemeLen); //!< if not-NULL, called with the parsed scheme (default is NULL).
     int (*userinfo_callback)(void* userData, const char* userinfo, size_t userinfoLen); //!< if not-NULL, called with the parsed userinfo (default is NULL).
     int (*host_callback)(void* userData, const char* host, size_t hostLen); //!< if not-NULL, called with the parsed host (default is NULL).

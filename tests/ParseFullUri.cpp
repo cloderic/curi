@@ -33,6 +33,8 @@
 
 struct URI
 {
+    size_t allocatedMemory;
+    size_t deallocatedMemory;
     std::string scheme;
     std::string userinfo;
     std::string host;
@@ -43,6 +45,8 @@ struct URI
 
     void clear()
     {
+        allocatedMemory = 0;
+        deallocatedMemory = 0;
         scheme.clear();
         userinfo.clear();
         host.clear();
@@ -55,6 +59,8 @@ struct URI
 
 extern "C"
 {
+    void* test_allocate(void* userData, size_t size);
+    void test_deallocate(void* userData, void* ptr, size_t size);
     static int scheme(void* userData, const char* scheme, size_t schemeLen);
     static int userinfo(void* userData, const char* userinfo, size_t userinfoLen);
     static int host(void* userData, const char* host, size_t hostLen);
@@ -62,6 +68,18 @@ extern "C"
     static int path(void* userData, const char* path, size_t pathLen);
     static int query(void* userData, const char* query, size_t queryLen);
     static int fragment(void* userData, const char* fragment, size_t fragmentLen);
+}
+
+void* test_allocate(void* userData, size_t size)
+{
+    static_cast<URI*>(userData)->allocatedMemory += size;
+    return malloc(size);
+}
+
+void test_deallocate(void* userData, void* ptr, size_t size)
+{
+    static_cast<URI*>(userData)->deallocatedMemory += size;
+    free(ptr);
 }
 
 int scheme(void* userData, const char* scheme, size_t schemeLen)
@@ -124,6 +142,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
 {
     curi_settings settings;
     curi_default_settings(&settings);
+    settings.allocate = test_allocate;
+    settings.deallocate = test_deallocate;
     settings.scheme_callback = scheme;
     settings.userinfo_callback = userinfo;
     settings.host_callback = host;
@@ -133,6 +153,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
     settings.fragment_callback = fragment;
 
     URI uri;
+    uri.clear();
 
     SECTION("Simple", "")
     {
@@ -147,7 +168,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/over/there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("Simple_Len", "")
     {
@@ -162,7 +187,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/over/there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("Simple_BadLen", "")
     {
@@ -177,7 +206,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/over/there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("Simple_NotNullTerminated", "")
     {
@@ -193,6 +226,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/over/there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
 
     uri.clear();
@@ -208,6 +243,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/foo.xml");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
 
     uri.clear();
@@ -223,7 +260,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/rfc/rfc1808.txt");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("RFC_2", "RFC's example #2")
     {
@@ -236,7 +277,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/rfc/rfc2396.txt");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("RFC_3", "RFC's example #3")
     {
@@ -249,7 +294,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/c=GB");
         CHECK(uri.query == "objectClass?one");
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("RFC_4", "RFC's example #4")
     {
@@ -262,7 +311,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "John.Doe@example.com");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("RFC_5", "RFC's example #5")
     {
@@ -275,7 +328,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "comp.infosystems.www.servers.unix");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("RFC_6", "RFC's example #6")
     {
@@ -288,7 +345,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "+1-816-555-1212");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("RFC_7", "RFC's example #7")
     {
@@ -301,7 +362,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("RFC_8", "RFC's example #8")
     {
@@ -314,7 +379,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "oasis:names:specification:docbook:dtd:xml:4.1.2");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("URL decoding", "Very url-encoded heavy URI")
     {
@@ -330,8 +399,19 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.query == "don't you think");
         CHECK(uri.fragment == "c:\\Program Files");
 
+        CHECK(uri.allocatedMemory == sizeof(char)*(
+            strlen("some%20random%20dude") + 1 + 
+            strlen("paren(thesis).org") + 1 + 
+            strlen("/brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
+            strlen("don%27t+you+think") + 1 +
+            strlen("c%3A%5CProgram%20Files") + 1));
+
+        CHECK(uri.deallocatedMemory == uri.allocatedMemory);
+
         settings.url_decode = 0;
     }
+
+    uri.clear();
 };
 
 TEST_CASE("ParseFullUri/Success/Scheme", "Valid URIs, scheme focus")
