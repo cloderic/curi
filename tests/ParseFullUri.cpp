@@ -41,6 +41,7 @@ struct URI
     std::string portStr;
     unsigned int port;
     std::string path;
+    std::vector<std::string> pathSegments;
     std::string query;
     std::string fragment;
 
@@ -54,6 +55,7 @@ struct URI
         port = 0;
         portStr.clear();
         path.clear();
+        pathSegments.clear();
         query.clear();
         fragment.clear();
     }
@@ -68,6 +70,7 @@ extern "C"
     static int host(void* userData, const char* host, size_t hostLen);
     static int portStr(void* userData, const char* port, size_t portLen);
     static int path(void* userData, const char* path, size_t pathLen);
+    static int pathSegment(void* userData, const char* pathSegment, size_t pathSegmentLen);
     static int query(void* userData, const char* query, size_t queryLen);
     static int fragment(void* userData, const char* fragment, size_t fragmentLen);
 }
@@ -131,6 +134,14 @@ int path(void* userData, const char* path, size_t pathLen)
     return 1;
 }
 
+int pathSegment(void* userData, const char* pathSegment, size_t pathSegmentLen)
+{
+    CAPTURE(pathSegment);
+    CAPTURE(pathSegmentLen);
+    static_cast<URI*>(userData)->pathSegments.push_back(std::string(pathSegment,pathSegmentLen));
+    return 1;
+}
+
 int query(void* userData, const char* query, size_t queryLen)
 {
     CAPTURE(query);
@@ -159,6 +170,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
     settings.port_callback = port;
     settings.portStr_callback = portStr;
     settings.path_callback = path;
+    settings.path_segment_callback = pathSegment;
     settings.query_callback = query;
     settings.fragment_callback = fragment;
 
@@ -197,6 +209,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr == "8042");
         CHECK(uri.port == 8042);
         CHECK(uri.path == "/over/there");
+        CHECK(uri.pathSegments.size() == 2);
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
@@ -217,6 +230,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr == "8042");
         CHECK(uri.port == 8042);
         CHECK(uri.path == "/over/there");
+        CHECK(uri.pathSegments.size() == 2);
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
@@ -238,6 +252,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr == "8042");
         CHECK(uri.port == 8042);
         CHECK(uri.path == "/over/there");
+        CHECK(uri.pathSegments.size() == 2);
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
@@ -256,6 +271,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "/foo.xml");
+        CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -274,6 +290,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "/rfc/rfc1808.txt");
+        CHECK(uri.pathSegments.size() == 2);
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -292,6 +309,9 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "/rfc/rfc2396.txt");
+        CHECK(uri.pathSegments.size() == 2);
+        CHECK(uri.pathSegments[0] == "rfc");
+        CHECK(uri.pathSegments[1] == "rfc2396.txt");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -310,6 +330,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "/c=GB");
+        CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.query == "objectClass?one");
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -328,6 +349,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "John.Doe@example.com");
+        CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -346,6 +368,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "comp.infosystems.www.servers.unix");
+        CHECK(uri.pathSegments.size() == 1);
+        CHECK(uri.pathSegments[0] == "comp.infosystems.www.servers.unix");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -364,6 +388,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "+1-816-555-1212");
+        CHECK(uri.pathSegments.size() == 1);
+        CHECK(uri.pathSegments[0] == "+1-816-555-1212");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -382,6 +408,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr == "80");
         CHECK(uri.port == 80);
         CHECK(uri.path == "/");
+        CHECK(uri.pathSegments.empty());
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -400,6 +427,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "oasis:names:specification:docbook:dtd:xml:4.1.2");
+        CHECK(uri.pathSegments.size() == 1);
+        CHECK(uri.pathSegments[0] == "oasis:names:specification:docbook:dtd:xml:4.1.2");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -420,6 +449,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr.empty());
         CHECK(uri.port == 0);
         CHECK(uri.path == "/brac[kets]:love{the|pipe}");
+        CHECK(uri.pathSegments.size() == 1);
+        CHECK(uri.pathSegments[0] == "brac[kets]:love{the|pipe}");
         CHECK(uri.query == "don't you think");
         CHECK(uri.fragment == "c:\\Program Files");
 
@@ -427,6 +458,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
             strlen("some%20random%20dude") + 1 + 
             strlen("paren(thesis).org") + 1 + 
             strlen("/brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
+            strlen("brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
             strlen("don%27t+you+think") + 1 +
             strlen("c%3A%5CProgram%20Files") + 1));
 

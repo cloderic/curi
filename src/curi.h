@@ -45,6 +45,7 @@ typedef struct
     int (*portStr_callback)(void* userData, const char* portStr, size_t portStrLen); //!< if not-NULL, called with the parsed port (default is NULL).
     int (*port_callback)(void* userData, unsigned int port); //!< if not-NULL, called with the parsed port as a number (default is NULL).
     int (*path_callback)(void* userData, const char* path, size_t pathLen); //!< if not-NULL, called with the parsed path (default is NULL).
+    int (*path_segment_callback)(void* userData, const char* pathSegment, size_t pathSegmentLen); //!< if not-NULL, called with the parsed path segment (default is NULL).
     int (*query_callback)(void* userData, const char* query, size_t queryLen); //!< if not-NULL, called with the parsed query (default is NULL).
     int (*fragment_callback)(void* userData, const char* fragment, size_t fragmentLen); //!< if not-NULL, called with the parsed fragment (default is NULL).
     int url_decode; // if != 0, the string passed to the callbacks ae first url decoded, requiring the allocation of a temporary string.

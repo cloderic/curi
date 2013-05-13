@@ -120,6 +120,15 @@ static curi_status handle_path(const char* path, size_t pathLen, const curi_sett
         return handle_str_callback_url_decoded(settings->path_callback, path, pathLen, settings, userData);
 }
 
+static curi_status handle_path_segment(const char* pathSegment, size_t pathSegmentLen, const curi_settings* settings, void* userData)
+{
+    if (settings->url_decode == 0)
+        return handle_str_callback(settings->path_segment_callback, pathSegment, pathSegmentLen, settings, userData);
+    else
+        return handle_str_callback_url_decoded(settings->path_segment_callback, pathSegment, pathSegmentLen, settings, userData);
+}
+
+
 static curi_status handle_query(const char* query, size_t queryLen, const curi_settings* settings, void* userData)
 {
     if (settings->url_decode == 0)
@@ -739,9 +748,9 @@ static curi_status parse_pchar(const char* uri, size_t len, size_t* offset, cons
     return status;
 }
 
-static curi_status parse_segment(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+static curi_status parse_pchars(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // segment = *pchar
+    // pchars = *pchar
 
     curi_status status = curi_status_success;
 
@@ -758,6 +767,21 @@ static curi_status parse_segment(const char* uri, size_t len, size_t* offset, co
         else
             break;
     }
+
+    return status;
+}
+
+
+static curi_status parse_segment(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+{
+    // segment = pchars
+    const size_t initialOffset = *offset;
+    curi_status status = curi_status_success;
+
+    status = parse_pchars(uri, len, offset, settings, userData);
+
+    if (status == curi_status_success)
+        status = handle_path_segment(uri + initialOffset, *offset - initialOffset, settings, userData);
 
     return status;
 }
@@ -807,14 +831,18 @@ static curi_status parse_path_abempty(const char* uri, size_t len, size_t* offse
 
 static curi_status parse_segment_nz(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // segment = 1*pchar
+    // segment-nz = pchar pchars
+    const size_t initialOffset = *offset;
     curi_status status = curi_status_success;
 
     if (status == curi_status_success)
         status = parse_pchar(uri, len, offset, settings, userData);
 
     if (status == curi_status_success)
-        status = parse_segment(uri, len, offset, settings, userData);
+        status = parse_pchars(uri, len, offset, settings, userData);
+
+    if (status == curi_status_success)
+        status = handle_path_segment(uri + initialOffset, *offset - initialOffset, settings, userData);
 
     return status;
 }

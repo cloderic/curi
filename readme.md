@@ -21,7 +21,6 @@ Additionally, it is continuously integrated on [Travis CI](https://travis-ci.org
 
 - More unit tests (especially failing unit tests)
 - Handle relative URI (i.e. schemeless URI)
-- Handle path segments callbacks
 - Handle query key/value callbacks
 - Performance tests and tweaking
 - Strict enforcing of IPv6 grammar rule
