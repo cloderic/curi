@@ -236,18 +236,18 @@ static curi_status parse_unreserved(const char* uri, size_t len, size_t* offset,
 
 #define CASE_HEXDIGIT \
     CASE_DIGIT: \
-    case 'a': \
-    case 'b': \
-    case 'c': \
-    case 'd': \
-    case 'e': \
-    case 'f': \
     case 'A': \
     case 'B': \
     case 'C': \
     case 'D': \
     case 'E': \
-    case 'F'
+    case 'F': \
+    case 'a': \
+    case 'b': \
+    case 'c': \
+    case 'd': \
+    case 'e': \
+    case 'f'
 
 static curi_status parse_hexdigit(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
