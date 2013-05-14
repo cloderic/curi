@@ -128,7 +128,6 @@ static curi_status handle_path_segment(const char* pathSegment, size_t pathSegme
         return handle_str_callback_url_decoded(settings->path_segment_callback, pathSegment, pathSegmentLen, settings, userData);
 }
 
-
 static curi_status handle_query(const char* query, size_t queryLen, const curi_settings* settings, void* userData)
 {
     if (settings->url_decode == 0)
@@ -168,13 +167,59 @@ static const char* read_char(const char* uri, size_t len, size_t* offset)
         status = __TRY_tryStatus; \
 } \
 
-static curi_status parse_alpha(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
-{
-    if (isalpha(*read_char(uri,len,offset)))
-        return curi_status_success;
-    else
-        return curi_status_error;
-}
+#define CASE_ALPHA \
+    case 'A': \
+    case 'B': \
+    case 'C': \
+    case 'D': \
+    case 'E': \
+    case 'F': \
+    case 'G': \
+    case 'H': \
+    case 'I': \
+    case 'J': \
+    case 'K': \
+    case 'L': \
+    case 'M': \
+    case 'N': \
+    case 'O': \
+    case 'P': \
+    case 'Q': \
+    case 'R': \
+    case 'S': \
+    case 'T': \
+    case 'U': \
+    case 'V': \
+    case 'W': \
+    case 'X': \
+    case 'Y': \
+    case 'Z': \
+    case 'a': \
+    case 'b': \
+    case 'c': \
+    case 'd': \
+    case 'e': \
+    case 'f': \
+    case 'g': \
+    case 'h': \
+    case 'i': \
+    case 'j': \
+    case 'k': \
+    case 'l': \
+    case 'm': \
+    case 'n': \
+    case 'o': \
+    case 'p': \
+    case 'q': \
+    case 'r': \
+    case 's': \
+    case 't': \
+    case 'u': \
+    case 'v': \
+    case 'w': \
+    case 'x': \
+    case 'y': \
+    case 'z'
 
 #define CASE_DIGIT \
     case '0': \
@@ -210,62 +255,67 @@ static curi_status parse_char(char c, const char* uri, size_t len, size_t* offse
 static curi_status parse_scheme(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / ".")
-    const size_t initialOffset = *offset;
+    const size_t schemeStartOffset = *offset;
     curi_status status = curi_status_success;
 
     if (status == curi_status_success)
-        status = parse_alpha(uri, len, offset, settings, userData);
+    {
+        switch (*read_char(uri,len,offset))
+        {
+            CASE_ALPHA:
+                status = curi_status_success;
+                break;
+            default:
+                status = curi_status_error;
+        }
+    }
 
     if (status == curi_status_success)
     {
-        while (1)
+        curi_status tryStatus = curi_status_success;
+        while (tryStatus == curi_status_success)
         {
-            status = curi_status_error;
-            if (status == curi_status_error)
-                TRY(status, offset, parse_alpha(uri, len, offset, settings, userData));
-
-            if (status == curi_status_error)
-                TRY(status, offset, parse_digit(uri, len, offset, settings, userData));
-
-            if (status == curi_status_error)
-                TRY(status, offset, parse_char('+', uri, len, offset, settings, userData));
-
-            if (status == curi_status_error)
-                TRY(status, offset, parse_char('-', uri, len, offset, settings, userData));
-
-            if (status == curi_status_error)
-                TRY(status, offset, parse_char('.', uri, len, offset, settings, userData));
-
-            if (status == curi_status_error)
+            size_t initialOffset = *offset;
+            switch (*read_char(uri,len,offset))
             {
-                // end of scheme reached
-                status = handle_scheme(uri + initialOffset, *offset - initialOffset, settings, userData);
-                break;
+                CASE_ALPHA:
+                CASE_DIGIT:
+                case '+':
+                case '-':
+                case '.':
+                    tryStatus = curi_status_success;
+                    break;
+                default:
+                    tryStatus = curi_status_error;
+                    *offset = initialOffset;
             }
-
         }
     }
+
+    if (status == curi_status_success)
+        status = handle_scheme(uri + schemeStartOffset, *offset - schemeStartOffset, settings, userData);
 
     return status;
 }
 
+#define CASE_UNRESERVED \
+    CASE_ALPHA: \
+    CASE_DIGIT: \
+    case '-': \
+    case '.': \
+    case '_': \
+    case '~'
+
 static curi_status parse_unreserved(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     // unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
-    const char* c = read_char(uri,len,offset);
-    switch (*c)
+    switch (*read_char(uri,len,offset))
     {
-        case '-':
-        case '.':
-        case '_':
-        case '~':
+        CASE_UNRESERVED:
             return curi_status_success;
         default:
-            if (isalnum(*c))
-                return curi_status_success;
-            else
-                return curi_status_error;
-    }
+            return curi_status_error;
+    } 
 }
 
 #define CASE_HEXDIGIT \
@@ -294,41 +344,60 @@ static curi_status parse_hexdigit(const char* uri, size_t len, size_t* offset, c
     }
 }
 
-static curi_status parse_pct_encoded(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+static curi_status parse_h8(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // pct-encoded = "%" HEXDIG HEXDIG
-    curi_status status = curi_status_success;
+    // h8 = HEXDIG HEXDIG
+    switch (*read_char(uri,len,offset))
+    {
+        CASE_HEXDIGIT:
+            break;
+        default:
+            return curi_status_error;
+    }
 
-    if (status == curi_status_success)
-        status = parse_char('%', uri, len, offset, settings, userData);
-
-    if (status == curi_status_success)
-        status = parse_hexdigit(uri, len, offset, settings, userData);
-
-    if (status == curi_status_success)
-        status = parse_hexdigit(uri, len, offset, settings, userData);
-
-    return status;
+    switch (*read_char(uri,len,offset))
+    {
+        CASE_HEXDIGIT:
+            return curi_status_success;
+        default:
+            return curi_status_error;
+    }
 }
+
+static curi_status parse_percent_encoded(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+{
+    // percent-encoded = "%" h8
+    switch (*read_char(uri,len,offset))
+    {
+        case '%':
+            break;
+        default:
+            return curi_status_error;
+    }
+
+    return parse_h8(uri,len,offset,settings,userData);
+}
+
+#define CASE_SUB_DELIMS \
+    case '!': \
+    case '$': \
+    case '&': \
+    case '\'': \
+    case '(': \
+    case ')': \
+    case '*': \
+    case '+': \
+    case ',': \
+    case ';': \
+    case '='
 
 static curi_status parse_sub_delims(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     //sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
     //             / "*" / "+" / "," / ";" / "="
-    const char* c = read_char(uri,len,offset);
-    switch (*c)
+    switch (*read_char(uri,len,offset))
     {
-        case '!':
-        case '$':
-        case '&':
-        case '\'':
-        case '(':
-        case ')':
-        case '*':
-        case '+':
-        case ',':
-        case ';':
-        case '=':
+        CASE_SUB_DELIMS:
             return curi_status_success;
         default:
             return curi_status_error;
@@ -338,64 +407,66 @@ static curi_status parse_sub_delims(const char* uri, size_t len, size_t* offset,
 static curi_status parse_userinfo_and_at(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     // userinfo_and_at = userinfo "@"
-    // userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
-    const size_t initialOffset = *offset;
-    size_t afterUserinfoOffset;
-    curi_status status;
+    // userinfo = *( unreserved / "%" h8 / sub-delims / ":" )
+    const size_t userinfoStartOffset = *offset;
+    size_t userinfoEndOffset;
+    curi_status status = curi_status_success;
 
-    while (1)
+    while (status == curi_status_success)
     {
-        status = curi_status_error;
-        if (status == curi_status_error)
-            TRY(status, offset, parse_unreserved(uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
-            TRY(status, offset, parse_pct_encoded(uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
-            TRY(status, offset, parse_sub_delims(uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
-            TRY(status, offset, parse_char(':', uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
+        size_t initialOffset = *offset;
+        switch (*read_char(uri,len,offset))
         {
-            // end of uri reached
-            break;
+            CASE_UNRESERVED:
+                break;
+            case '%':
+                status = parse_h8(uri, len, offset, settings, userData);
+                break;
+            CASE_SUB_DELIMS:
+            case ':':
+                break;
+            default:
+                status = curi_status_error;
         }
+        if (status == curi_status_error)
+            *offset = initialOffset;        
     }
 
-    afterUserinfoOffset = *offset;
+    userinfoEndOffset = *offset;
     
     status = parse_char('@', uri, len, offset, settings, userData);
 
     if (status == curi_status_success)
-        status = handle_userinfo(uri + initialOffset, afterUserinfoOffset - initialOffset, settings, userData);
+        status = handle_userinfo(uri + userinfoStartOffset, userinfoEndOffset - userinfoStartOffset, settings, userData);
 
     return status;
 }
 
 static curi_status parse_reg_name(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // reg-name = *( unreserved / pct-encoded / sub-delims )
-    while (1)
+    // reg-name = *( unreserved / "%" h8 / sub-delims )
+    curi_status status = curi_status_success;
+
+    while (status == curi_status_success)
     {
-        curi_status status = curi_status_error;
-        if (status == curi_status_error)
-            TRY(status, offset, parse_unreserved(uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
-            TRY(status, offset, parse_pct_encoded(uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
-            TRY(status, offset, parse_sub_delims(uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
+        size_t initialOffset = *offset;
+        switch (*read_char(uri,len,offset))
         {
-            // end of host reached
-            return curi_status_success;
+            CASE_UNRESERVED:
+                break;
+            case '%':
+                status = parse_h8(uri, len, offset, settings, userData);
+                break;
+            CASE_SUB_DELIMS:
+                break;
+            default:
+                status = curi_status_error;
         }
+        if (status == curi_status_error)
+            *offset = initialOffset;        
     }
+
+    return curi_status_success;
 }
 
 static curi_status parse_dec_octet(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
@@ -489,7 +560,7 @@ static curi_status parse_h16_and_colon(const char* uri, size_t len, size_t* offs
 
 static curi_status parse_ls32(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // ls32 = ( h16 ":" h16 ) / IPv4address
+    // ls32 = ( h16_and_colon h16 ) / IPv4address
     curi_status status = curi_status_error;
 
     if (status == curi_status_error)
@@ -498,9 +569,7 @@ static curi_status parse_ls32(const char* uri, size_t len, size_t* offset, const
         curi_status tryStatus = curi_status_success;
 
         if (tryStatus == curi_status_success)
-            tryStatus = parse_h16(uri, len, offset, settings, userData);
-        if (tryStatus == curi_status_success)
-            tryStatus = parse_char(':', uri, len, offset, settings, userData);
+            tryStatus = parse_h16_and_colon(uri, len, offset, settings, userData);
         if (tryStatus == curi_status_success)
             tryStatus = parse_h16(uri, len, offset, settings, userData);
 
@@ -727,24 +796,20 @@ static curi_status parse_authority(const char* uri, size_t len, size_t* offset, 
 
 static curi_status parse_pchar(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
-    curi_status status = curi_status_error;
-    if (status == curi_status_error)
-        TRY(status, offset, parse_unreserved(uri, len, offset, settings, userData));
-
-    if (status == curi_status_error)
-        TRY(status, offset, parse_pct_encoded(uri, len, offset, settings, userData));
-
-    if (status == curi_status_error)
-        TRY(status, offset, parse_sub_delims(uri, len, offset, settings, userData));
-
-    if (status == curi_status_error)
-        TRY(status, offset, parse_char(':', uri, len, offset, settings, userData));
-
-    if (status == curi_status_error)
-        TRY(status, offset, parse_char('@', uri, len, offset, settings, userData));
-
-    return status;
+    // pchar = unreserved / "%" h8 / sub-delims / ":" / "@"
+    switch (*read_char(uri,len,offset))
+    {
+        CASE_UNRESERVED:
+            return curi_status_success;
+        case '%':
+            return parse_h8(uri, len, offset, settings, userData);
+        CASE_SUB_DELIMS:
+        case ':':
+        case '@':
+            return curi_status_success;
+        default:
+            return curi_status_error;
+    }
 }
 
 static curi_status parse_pchars(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
@@ -1088,7 +1153,7 @@ curi_status curi_url_decode(const char* input, size_t inputLen, char* output, si
         if (status == curi_status_error)
         {
             // percent encoding
-            TRY(status, &inputOffset, parse_pct_encoded(input, inputLen, &inputOffset, 0, 0));
+            TRY(status, &inputOffset, parse_percent_encoded(input, inputLen, &inputOffset, 0, 0));
 
             if (status == curi_status_success)
             {
