@@ -189,6 +189,9 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.portStr == "8042");
         CHECK(uri.port == 8042);
         CHECK(uri.path == "/over/there");
+        CHECK(uri.pathSegments.size() == 2);
+        CHECK(uri.pathSegments[0] == "over");
+        CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
@@ -210,6 +213,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.port == 8042);
         CHECK(uri.path == "/over/there");
         CHECK(uri.pathSegments.size() == 2);
+        CHECK(uri.pathSegments[0] == "over");
+        CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
@@ -231,6 +236,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.port == 8042);
         CHECK(uri.path == "/over/there");
         CHECK(uri.pathSegments.size() == 2);
+        CHECK(uri.pathSegments[0] == "over");
+        CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
@@ -253,6 +260,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.port == 8042);
         CHECK(uri.path == "/over/there");
         CHECK(uri.pathSegments.size() == 2);
+        CHECK(uri.pathSegments.size() == 2);
+        CHECK(uri.pathSegments[0] == "over");
+        CHECK(uri.pathSegments[1] == "there");
+        CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
@@ -272,6 +283,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.port == 0);
         CHECK(uri.path == "/foo.xml");
         CHECK(uri.pathSegments.size() == 1);
+        CHECK(uri.pathSegments[0] == "foo.xml");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -291,6 +303,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.port == 0);
         CHECK(uri.path == "/rfc/rfc1808.txt");
         CHECK(uri.pathSegments.size() == 2);
+        CHECK(uri.pathSegments[0] == "rfc");
+        CHECK(uri.pathSegments[1] == "rfc1808.txt");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -331,6 +345,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.port == 0);
         CHECK(uri.path == "/c=GB");
         CHECK(uri.pathSegments.size() == 1);
+        CHECK(uri.pathSegments[0] == "c=GB");
         CHECK(uri.query == "objectClass?one");
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -350,6 +365,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.port == 0);
         CHECK(uri.path == "John.Doe@example.com");
         CHECK(uri.pathSegments.size() == 1);
+        CHECK(uri.pathSegments[0] == "John.Doe@example.com");
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
@@ -554,21 +570,90 @@ TEST_CASE("ParseFullUri/Error/Scheme", "Bad URIs, scheme focus")
 
 extern "C"
 {
-    static int cancellingCallback(void* userData, const char* str, size_t strLen)
+    static int cancellingCallbackStr(void* userData, const char* str, size_t strLen)
+    {
+        return 0;
+    }
+
+    static int cancellingCallbackUint(void* userData, unsigned int port)
     {
         return 0;
     }
 }
 TEST_CASE("ParseFullUri/Cancelled", "Canceled parsing of URI")
 {
+    const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+    curi_settings settings;
+
     SECTION("Scheme", "")
     {
-        curi_settings settings;
         curi_default_settings(&settings);
-        settings.scheme_callback = cancellingCallback;
+        settings.scheme_callback = cancellingCallbackStr;
 
-        const std::string uriStr("http://google.com");
-        
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("Userinfo", "")
+    {
+        curi_default_settings(&settings);
+        settings.userinfo_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("Host", "")
+    {
+        curi_default_settings(&settings);
+        settings.host_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("PortStr", "")
+    {
+        curi_default_settings(&settings);
+        settings.portStr_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("Port", "")
+    {
+        curi_default_settings(&settings);
+        settings.port_callback = cancellingCallbackUint;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("Path", "")
+    {
+        curi_default_settings(&settings);
+        settings.path_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("PathSegment", "")
+    {
+        curi_default_settings(&settings);
+        settings.path_segment_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("Query", "")
+    {
+        curi_default_settings(&settings);
+        settings.query_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("Fragment", "")
+    {
+        curi_default_settings(&settings);
+        settings.fragment_callback = cancellingCallbackStr;
+
         CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
     }
 }

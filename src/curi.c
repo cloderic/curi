@@ -710,17 +710,16 @@ static curi_status parse_authority(const char* uri, size_t len, size_t* offset, 
 
     if (status == curi_status_success)
     {
-        size_t subOffset = *offset;
+        size_t initialOffset = *offset;
         curi_status subStatus = curi_status_success;
         if (subStatus == curi_status_success)
-            subStatus = parse_char(':', uri, len, &subOffset, settings, userData);
+            subStatus = parse_char(':', uri, len, offset, settings, userData);
         if (subStatus == curi_status_success)
-            subStatus = parse_port(uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-        {
-            *offset = subOffset;
+            subStatus = parse_port(uri, len, offset, settings, userData);
+        if (subStatus == curi_status_error)
+            *offset = initialOffset;
+        else
             status = subStatus;
-        }
     }
 
     return status;
@@ -793,24 +792,22 @@ static curi_status parse_segments(const char* uri, size_t len, size_t* offset, c
 
     while (1)
     {
-        size_t subOffset = *offset;
-        curi_status subStatus = curi_status_success;
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_success;
 
-        if (subStatus == curi_status_success)
-            subStatus = parse_char('/', uri, len, &subOffset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_char('/', uri, len, offset, settings, userData);
 
-        if (subStatus == curi_status_success)
-            subStatus = parse_segment(uri, len, &subOffset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_segment(uri, len, offset, settings, userData);
 
-        if (subStatus == curi_status_success)
+        if (tryStatus == curi_status_error)
         {
-            *offset = subOffset;
-            status = subStatus;
-        }
-        else
-        {
+            *offset = initialOffset;
             break;
         }
+        else
+            status = tryStatus;
     }
 
     return status;
@@ -858,20 +855,19 @@ static curi_status parse_path_absolute(const char* uri, size_t len, size_t* offs
 
     if (status == curi_status_success)
     {
-        size_t subOffset = *offset;
-        curi_status subStatus = curi_status_success;
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_success;
 
-        if (subStatus == curi_status_success)
-            status = parse_segment_nz(uri, len, &subOffset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_segment_nz(uri, len, offset, settings, userData);
 
-        if (subStatus == curi_status_success)
-            status = parse_segments(uri, len, &subOffset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_segments(uri, len, offset, settings, userData);
 
-        if (subStatus == curi_status_success)
-        {
-            *offset = subOffset;
-            status = subStatus;
-        }
+        if (tryStatus == curi_status_error)
+            *offset = initialOffset;
+        else
+            status = tryStatus;
     }
 
     if (status == curi_status_success)
@@ -889,20 +885,19 @@ static curi_status parse_path_rootless(const char* uri, size_t len, size_t* offs
 
     if (status == curi_status_success)
     {
-        size_t subOffset = *offset;
-        curi_status subStatus = curi_status_success;
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_success;
 
-        if (subStatus == curi_status_success)
-            status = parse_segment_nz(uri, len, &subOffset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_segment_nz(uri, len, offset, settings, userData);
 
-        if (subStatus == curi_status_success)
-            status = parse_segments(uri, len, &subOffset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_segments(uri, len, offset, settings, userData);
 
-        if (subStatus == curi_status_success)
-        {
-            *offset = subOffset;
-            status = subStatus;
-        }
+        if (tryStatus == curi_status_error)
+            *offset = initialOffset;
+        else
+            status = tryStatus;
     }
 
     if (status == curi_status_success)
@@ -927,21 +922,20 @@ static curi_status parse_hier_part(const char* uri, size_t len, size_t* offset, 
 
     if (status == curi_status_error)
     {
-        size_t subOffset = *offset;
-        curi_status subStatus = curi_status_success;
-        if (subStatus == curi_status_success)
-            subStatus = parse_char('/', uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-            subStatus = parse_char('/', uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-            subStatus = parse_authority(uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-            subStatus = parse_path_abempty(uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-        {
-            *offset = subOffset;
-            status = subStatus;
-        }
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_success;
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_char('/', uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_char('/', uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_authority(uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_path_abempty(uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_error)
+            *offset = initialOffset;
+        else
+            status = tryStatus;
     }
     
     if (status == curi_status_error)
@@ -1021,32 +1015,30 @@ static curi_status parse_full_uri(const char* uri, size_t len, size_t* offset, c
 
     if (status == curi_status_success)
     {
-        size_t subOffset = *offset;
-        curi_status subStatus = curi_status_success;
-        if (subStatus == curi_status_success)
-            subStatus = parse_char('?', uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-            subStatus = parse_query(uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-        {
-            *offset = subOffset;
-            status = subStatus;
-        }
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_success;
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_char('?', uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_query(uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_error)
+            *offset = initialOffset;
+        else
+            status = tryStatus;
     }
 
     if (status == curi_status_success)
     {
-        size_t subOffset = *offset;
-        curi_status subStatus = curi_status_success;
-        if (subStatus == curi_status_success)
-            subStatus = parse_char('#', uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-            subStatus = parse_fragment(uri, len, &subOffset, settings, userData);
-        if (subStatus == curi_status_success)
-        {
-            *offset = subOffset;
-            status = subStatus;
-        }
+        size_t initialOffset = *offset;
+        curi_status tryStatus = curi_status_success;
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_char('#', uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_success)
+            tryStatus = parse_fragment(uri, len, offset, settings, userData);
+        if (tryStatus == curi_status_error)
+            *offset = initialOffset;
+        else
+            status = tryStatus;
     }
 
     return status;
