@@ -43,6 +43,7 @@ struct URI
     std::string path;
     std::vector<std::string> pathSegments;
     std::string query;
+    std::vector<std::string> queryItems; 
     std::string fragment;
 
     void clear()
@@ -72,6 +73,7 @@ extern "C"
     static int path(void* userData, const char* path, size_t pathLen);
     static int pathSegment(void* userData, const char* pathSegment, size_t pathSegmentLen);
     static int query(void* userData, const char* query, size_t queryLen);
+    static int queryItem(void* userData, const char* queryItem, size_t queryItemLen);
     static int fragment(void* userData, const char* fragment, size_t fragmentLen);
 }
 
@@ -150,6 +152,14 @@ int query(void* userData, const char* query, size_t queryLen)
     return 1;
 }
 
+int queryItem(void* userData, const char* queryItem, size_t queryItemLen)
+{
+    CAPTURE(queryItem);
+    CAPTURE(queryItemLen);
+    static_cast<URI*>(userData)->queryItems.push_back(std::string(queryItem,queryItemLen));
+    return 1;
+}
+
 int fragment(void* userData, const char* fragment, size_t fragmentLen)
 {
     CAPTURE(fragment);
@@ -172,6 +182,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
     settings.path_callback = path;
     settings.path_segment_callback = pathSegment;
     settings.query_callback = query;
+    settings.query_item_callback = queryItem;
     settings.fragment_callback = fragment;
 
     URI uri;
@@ -216,6 +227,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "over");
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
+        CHECK(uri.queryItems.size() == 1);
+        CHECK(uri.queryItems[0] == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -239,6 +252,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "over");
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
+        CHECK(uri.queryItems.size() == 1);
+        CHECK(uri.queryItems[0] == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -265,6 +280,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
+        CHECK(uri.queryItems.size() == 1);
+        CHECK(uri.queryItems[0] == "name=ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -285,6 +302,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "foo.xml");
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -306,6 +324,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "rfc");
         CHECK(uri.pathSegments[1] == "rfc1808.txt");
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -327,6 +346,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "rfc");
         CHECK(uri.pathSegments[1] == "rfc2396.txt");
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -336,7 +356,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
 
     SECTION("RFC_3", "RFC's example #3")
     {
-        CHECK(curi_status_success == curi_parse_full_uri_nt("ldap://[2001:db8::7]/c=GB?objectClass?one", &settings, &uri));
+        curi_settings rfc3_settings = settings;
+        rfc3_settings.query_item_separator = '?';
+
+        CHECK(curi_status_success == curi_parse_full_uri_nt("ldap://[2001:db8::7]/c=GB?objectClass?one", &rfc3_settings, &uri));
 
         CHECK(uri.scheme == "ldap");
         CHECK(uri.userinfo.empty());
@@ -347,6 +370,9 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "c=GB");
         CHECK(uri.query == "objectClass?one");
+        CHECK(uri.queryItems.size() == 2);
+        CHECK(uri.queryItems[0] == "objectClass");
+        CHECK(uri.queryItems[1] == "one");
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -367,6 +393,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "John.Doe@example.com");
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -387,6 +414,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "comp.infosystems.www.servers.unix");
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -407,6 +435,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "+1-816-555-1212");
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -426,6 +455,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/");
         CHECK(uri.pathSegments.empty());
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -446,6 +476,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "oasis:names:specification:docbook:dtd:xml:4.1.2");
         CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -468,6 +499,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "brac[kets]:love{the|pipe}");
         CHECK(uri.query == "don't you think");
+        CHECK(uri.queryItems.size() == 1);
+        CHECK(uri.queryItems[0] == "don't you think");
         CHECK(uri.fragment == "c:\\Program Files");
 
         CHECK(uri.allocatedMemory == sizeof(char)*(
@@ -475,6 +508,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
             strlen("paren(thesis).org") + 1 + 
             strlen("/brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
             strlen("brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
+            strlen("don%27t+you+think") + 1 +
             strlen("don%27t+you+think") + 1 +
             strlen("c%3A%5CProgram%20Files") + 1));
 
@@ -532,6 +566,29 @@ TEST_CASE("ParseFullUri/Success/Path", "Valid URIs, path focus")
         CHECK(uri.path == "/is f#&ing very/rich");
 
         settings.url_decode = 0;
+    }
+}
+
+TEST_CASE("ParseFullUri/Success/Query", "Valid URIs, query focus")
+{
+    curi_settings settings;
+    curi_default_settings(&settings);
+    settings.query_callback = query;
+    settings.query_item_callback = queryItem;
+
+    URI uri;
+
+    SECTION("MultipleItems", "")
+    {
+        const std::string uriStr("ssh2:my/taylor/is/rich?tutu=foo&toto=bar&titi=baz");
+
+        CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
+
+        CHECK(uri.query == "tutu=foo&toto=bar&titi=baz");
+        CHECK(uri.queryItems.size() == 3);
+        CHECK(uri.queryItems[0] == "tutu=foo");
+        CHECK(uri.queryItems[1] == "toto=bar");
+        CHECK(uri.queryItems[2] == "titi=baz");
     }
 }
 
@@ -645,6 +702,14 @@ TEST_CASE("ParseFullUri/Cancelled", "Canceled parsing of URI")
     {
         curi_default_settings(&settings);
         settings.query_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("QueryItem", "")
+    {
+        curi_default_settings(&settings);
+        settings.query_item_callback = cancellingCallbackStr;
 
         CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
     }
