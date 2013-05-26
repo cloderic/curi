@@ -832,19 +832,21 @@ static curi_status parse_authority(const char* uri, size_t len, size_t* offset, 
     return status;
 }
 
+#define CASE_PCHAR_NO_PCT \
+    CASE_UNRESERVED: \
+    CASE_SUB_DELIMS: \
+    case ':': \
+    case '@'
+
 static curi_status parse_pchar(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     // pchar = unreserved / "%" h8 / sub-delims / ":" / "@"
     switch (*read_char(uri,len,offset))
     {
-        CASE_UNRESERVED:
+        CASE_PCHAR_NO_PCT:
             return curi_status_success;
         case '%':
             return parse_h8(uri, len, offset, settings, userData);
-        CASE_SUB_DELIMS:
-        case ':':
-        case '@':
-            return curi_status_success;
         default:
             return curi_status_error;
     }
@@ -1053,11 +1055,36 @@ static curi_status parse_hier_part(const char* uri, size_t len, size_t* offset, 
     return status;
 }
 
+#define CASE_QUERY_FRAGMENT_CHAR_NO_PCT \
+    CASE_PCHAR_NO_PCT: \
+    case '/': \
+    case '?'
+
+static curi_status parse_query_fragment_char(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+{
+    // query_fragment_char = pchar / "/" / "?"
+
+    switch (*read_char(uri, len, offset))
+    {
+        CASE_QUERY_FRAGMENT_CHAR_NO_PCT:
+            return curi_status_success;
+            break;
+        case '%':
+            return parse_h8(uri, len, offset, settings, userData);
+            break;
+        default:
+            return curi_status_error;
+            break;
+    }
+}
+
 static curi_status parse_query_item(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     // query_item = query_item_key [query_item_key_separator query_item_value]
-    // query_item_key = *( unreserved / "%" h8 / sub-delims / ":" / "@" / "/" / "?" ) (but no query_item_separator or query_item_key_separator)
-    // query_item_value = *( unreserved / "%" h8 / sub-delims / ":" / "@" / "/" / "?" ) (but no query_item_separator)
+    // query_item_key = *query_fragment_char (but no query_item_separator or query_item_key_separator)
+    // query_item_separator = settings->query_item_separator (default is "&")
+    // query_item_key_separator = settings->query_item_key_separator (default is "=")
+    // query_item_value = *query_fragment_char (but no query_item_separator)
 
     const size_t keyStartOffset = *offset;
 
@@ -1075,18 +1102,11 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
         {
             switch (c)
             {
-                CASE_UNRESERVED:
+                CASE_QUERY_FRAGMENT_CHAR_NO_PCT:
                     status = curi_status_success;
                     break;
                 case '%':
                     status = parse_h8(uri, len, offset, settings, userData);
-                    break;
-                CASE_SUB_DELIMS:
-                case ':':
-                case '@':
-                case '/':
-                case '?':
-                    status = curi_status_success;
                     break;
                 default:
                     status = curi_status_error;
@@ -1118,18 +1138,11 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
             {
                 switch (c)
                 {
-                    CASE_UNRESERVED:
+                    CASE_QUERY_FRAGMENT_CHAR_NO_PCT:
                         status = curi_status_success;
                         break;
                     case '%':
                         status = parse_h8(uri, len, offset, settings, userData);
-                        break;
-                    CASE_SUB_DELIMS:
-                    case ':':
-                    case '@':
-                    case '/':
-                    case '?':
-                        status = curi_status_success;
                         break;
                     default:
                         status = curi_status_error;
@@ -1156,104 +1169,99 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
 static curi_status parse_query(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
     // If not interested in individual items,
-    //      query = *( unreserved / "%" h8 / sub-delims / ":" / "@" / "/" / "?" )
+    //      query = "?" *query_fragment_char
     // if interested,
-    //      query = query_item *(query_item_separator query_item)
+    //      query = "?" query_item *(query_item_separator query_item)
     //      query_item_separator = settings->query_item_separator (default is "&")
 
     curi_status status = curi_status_success;
-    const size_t initialOffset = *offset;
 
-    if (!settings->query_item_callback)
+    size_t queryStartOffset;
+
+    if (status == curi_status_success)
+        status = parse_char('?', uri, len, offset, settings, userData);
+
+    queryStartOffset = *offset;
+
+    if (status == curi_status_success)
     {
-        while (status == curi_status_success)
+        if (!settings->query_item_callback)
         {
-            size_t previousOffset = *offset;
-            switch (*read_char(uri,len,offset))
-            {
-                CASE_UNRESERVED:
-                    status = curi_status_success;
-                    break;
-                case '%':
-                    status = parse_h8(uri, len, offset, settings, userData);
-                    break;
-                CASE_SUB_DELIMS:
-                case ':':
-                case '@':
-                case '/':
-                case '?':
-                    status = curi_status_success;
-                    break;
-                default:
-                    status = curi_status_error;
-                    break;
-            }
-            if (status != curi_status_success)
-                *offset = previousOffset;
-        }
-
-        status = curi_status_success;
-    }
-    else
-    {
-        status = parse_query_item(uri, len, offset, settings, userData);
-
-        if (status == curi_status_success)
-        {
-            curi_status tryStatus = curi_status_success;
-            while (tryStatus == curi_status_success)
+            while (status == curi_status_success)
             {
                 size_t previousOffset = *offset;
 
-                tryStatus = parse_char(settings->query_item_separator, uri, len, offset, settings, userData);
+                status = parse_query_fragment_char(uri, len, offset, settings, userData);
 
-                if (tryStatus == curi_status_success)
-                    tryStatus = parse_query_item(uri, len, offset, settings, userData);
-
-                if (tryStatus != curi_status_success)
+                if (status != curi_status_success)
                     *offset = previousOffset;
+            }
+
+            status = curi_status_success;
+        }
+        else
+        {
+            status = parse_query_item(uri, len, offset, settings, userData);
+
+            if (status == curi_status_success)
+            {
+                curi_status tryStatus = curi_status_success;
+                while (tryStatus == curi_status_success)
+                {
+                    size_t previousOffset = *offset;
+
+                    tryStatus = parse_char(settings->query_item_separator, uri, len, offset, settings, userData);
+
+                    if (tryStatus == curi_status_success)
+                        tryStatus = parse_query_item(uri, len, offset, settings, userData);
+
+                    if (tryStatus != curi_status_success)
+                        *offset = previousOffset;
+                }
             }
         }
     }
 
     if (status == curi_status_success)
-        status = handle_query(uri + initialOffset, *offset - initialOffset, settings, userData);
+        status = handle_query(uri + queryStartOffset, *offset - queryStartOffset, settings, userData);
 
     return status;
 }
 
 static curi_status parse_fragment(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // fragment = *( pchar / "/" / "?" )
-
-    const size_t initialOffset = *offset;
+    // fragment = "#" *query_fragment_char
     curi_status status = curi_status_success;
+    size_t fragmentStartOffset;
+    
+    if (status == curi_status_success)
+        status = parse_char('#', uri, len, offset, settings, userData);
 
-    while (1)
+    fragmentStartOffset = *offset;
+
+    if (status == curi_status_success)
     {
-        curi_status status = curi_status_error;
-        if (status == curi_status_error)
-            TRY(status, offset, parse_pchar(uri, len, offset, settings, userData));
+        while (status == curi_status_success)
+        {
+            size_t previousOffset = *offset;
+            
+            status = parse_query_fragment_char(uri, len, offset, settings, userData);
 
-        if (status == curi_status_error)
-            TRY(status, offset, parse_char('/', uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
-            TRY(status, offset, parse_char('?', uri, len, offset, settings, userData));
-
-        if (status == curi_status_error)
-            break;
+            if (status != curi_status_success)
+                *offset = previousOffset;
+        }
+        status = curi_status_success;
     }
 
     if (status == curi_status_success)
-        status = handle_fragment(uri + initialOffset, *offset - initialOffset, settings, userData);
+        status = handle_fragment(uri + fragmentStartOffset, *offset - fragmentStartOffset, settings, userData);
 
     return status;
 }
 
 static curi_status parse_full_uri(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+    // URI = scheme ":" hier-part [ query ] [ fragment ]
     curi_status status = curi_status_success;
 
     if (status == curi_status_success)
@@ -1266,32 +1274,10 @@ static curi_status parse_full_uri(const char* uri, size_t len, size_t* offset, c
         status = parse_hier_part(uri, len, offset, settings, userData);
 
     if (status == curi_status_success)
-    {
-        size_t initialOffset = *offset;
-        curi_status tryStatus = curi_status_success;
-        if (tryStatus == curi_status_success)
-            tryStatus = parse_char('?', uri, len, offset, settings, userData);
-        if (tryStatus == curi_status_success)
-            tryStatus = parse_query(uri, len, offset, settings, userData);
-        if (tryStatus == curi_status_error)
-            *offset = initialOffset;
-        else
-            status = tryStatus;
-    }
+        TRY(status, offset, parse_query(uri, len, offset, settings, userData));
 
     if (status == curi_status_success)
-    {
-        size_t initialOffset = *offset;
-        curi_status tryStatus = curi_status_success;
-        if (tryStatus == curi_status_success)
-            tryStatus = parse_char('#', uri, len, offset, settings, userData);
-        if (tryStatus == curi_status_success)
-            tryStatus = parse_fragment(uri, len, offset, settings, userData);
-        if (tryStatus == curi_status_error)
-            *offset = initialOffset;
-        else
-            status = tryStatus;
-    }
+        TRY(status, offset, parse_fragment(uri, len, offset, settings, userData));
 
     return status;
 }
