@@ -19,7 +19,6 @@ Additionally, it is continuously integrated on [Travis CI](https://travis-ci.org
     
 ## TODO ##
 
-- Increase warning level
 - More unit tests (especially failing unit tests)
 - Handle relative URI (i.e. schemeless URI)
 - Performance tests and tweaking

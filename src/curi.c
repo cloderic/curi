@@ -514,7 +514,6 @@ static curi_status parse_dec_octet(const char* uri, size_t len, size_t* offset, 
     //           / "1" 2DIGIT            ; 100-199
     //           / "2" %x30-34 DIGIT     ; 200-249
     //           / "25" %x30-35          ; 250-255
-    curi_status status = curi_status_success;
     int number;
     char numberStr[4] = {'\0', '\0', '\0', '\0'};
     size_t previousOffset;
