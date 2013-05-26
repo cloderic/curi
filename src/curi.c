@@ -41,6 +41,7 @@ void curi_default_settings(curi_settings* settings)
     settings->allocate = default_allocate;
     settings->deallocate = default_deallocate;
     settings->query_item_separator = '&';
+    settings->query_item_key_separator = '=';
 }
 
 static curi_status handle_str_callback(int (*callback)(void* userData, const char* str, size_t strLen), const char* str, size_t strLen, const curi_settings* settings, void* userData)
@@ -137,12 +138,40 @@ static curi_status handle_query(const char* query, size_t queryLen, const curi_s
         return handle_str_callback_url_decoded(settings->query_callback, query, queryLen, settings, userData);
 }
 
-static curi_status handle_query_item(const char* queryItem, size_t queryItemLen, const curi_settings* settings, void* userData)
+static curi_status handle_query_item(const char* key, size_t keyLen, const char* value, size_t valueLen, const curi_settings* settings, void* userData)
 {
-    if (settings->url_decode == 0)
-        return handle_str_callback(settings->query_item_callback, queryItem, queryItemLen, settings, userData);
-    else
-        return handle_str_callback_url_decoded(settings->query_item_callback, queryItem, queryItemLen, settings, userData);
+    curi_status status = curi_status_success;
+    if (keyLen > 0 && settings->query_item_callback)
+    {
+        if (settings->url_decode == 0)
+        {
+            if (settings->query_item_callback(userData, key, keyLen, value, valueLen) == 0)
+                status = curi_status_canceled;
+        }
+        else
+        {
+            size_t keyAllocationSize = (keyLen+1) * sizeof(char);
+            size_t urlDecodedKeyLen;
+            char* urlDecodedKey = (char*)settings->allocate(userData, keyAllocationSize);
+
+            size_t valueAllocationSize = (valueLen+1) * sizeof(char);
+            size_t urlDecodedValueLen;
+            char* urlDecodedValue = (char*)settings->allocate(userData, valueAllocationSize);
+            
+            status = curi_url_decode(key, keyLen, urlDecodedKey, keyLen+1, &urlDecodedKeyLen);
+
+            if (status == curi_status_success)
+                status = curi_url_decode(value,valueLen,urlDecodedValue,valueLen+1,&urlDecodedValueLen);
+
+            if (status == curi_status_success)
+                if (settings->query_item_callback(userData, urlDecodedKey, urlDecodedKeyLen, urlDecodedValue, urlDecodedValueLen) == 0)
+                    status =  curi_status_canceled;
+
+            settings->deallocate(userData, urlDecodedKey, keyAllocationSize);
+            settings->deallocate(userData, urlDecodedValue, valueAllocationSize);
+        }
+    }
+    return status;
 }
 
 static curi_status handle_fragment(const char* fragment, size_t fragmentLen, const curi_settings* settings, void* userData)
@@ -1026,17 +1055,21 @@ static curi_status parse_hier_part(const char* uri, size_t len, size_t* offset, 
 
 static curi_status parse_query_item(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // query_item = *( unreserved / "%" h8 / sub-delims / ":" / "@" / "/" / "?" ) (but no settings->query_item_separator)
+    // query_item = query_item_key [query_item_key_separator query_item_value]
+    // query_item_key = *( unreserved / "%" h8 / sub-delims / ":" / "@" / "/" / "?" ) (but no query_item_separator or query_item_key_separator)
+    // query_item_value = *( unreserved / "%" h8 / sub-delims / ":" / "@" / "/" / "?" ) (but no query_item_separator)
 
-    const size_t initialOffset = *offset;
+    const size_t keyStartOffset = *offset;
+
     curi_status status = curi_status_success;
-
     while (status == curi_status_success)
     {
         size_t previousOffset = *offset;
 
-        char c = *read_char(uri,len,offset);
+        char c = *read_char(uri, len, offset);
         if (c == settings->query_item_separator)
+            status = curi_status_error;
+        else if (c == settings->query_item_key_separator)
             status = curi_status_error;
         else
         {
@@ -1065,7 +1098,57 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
             *offset = previousOffset;
     }
 
-    status = handle_query_item(uri + initialOffset, *offset - initialOffset, settings, userData);
+    const size_t keyEndOffset = *offset;
+
+    status = parse_char(settings->query_item_key_separator, uri, len, offset, settings, userData);
+    
+    if (status == curi_status_success)
+    {
+        // There is a value
+        const size_t valueStartOffset = *offset;
+
+        while (status == curi_status_success)
+        {
+            size_t previousOffset = *offset;
+
+            char c = *read_char(uri, len, offset);
+            if (c == settings->query_item_separator)
+                status = curi_status_error;
+            else
+            {
+                switch (c)
+                {
+                    CASE_UNRESERVED:
+                        status = curi_status_success;
+                        break;
+                    case '%':
+                        status = parse_h8(uri, len, offset, settings, userData);
+                        break;
+                    CASE_SUB_DELIMS:
+                    case ':':
+                    case '@':
+                    case '/':
+                    case '?':
+                        status = curi_status_success;
+                        break;
+                    default:
+                        status = curi_status_error;
+                        break;
+                }
+            }
+        
+            if (status != curi_status_success)
+                *offset = previousOffset;
+        }
+
+        status = handle_query_item(uri + keyStartOffset, keyEndOffset - keyStartOffset, uri + valueStartOffset, *offset - valueStartOffset, settings, userData);
+    }
+    else
+    {
+        *offset = keyEndOffset;
+        // There is no value
+        status = handle_query_item(uri + keyStartOffset, keyEndOffset - keyStartOffset, 0, 0, settings, userData);
+    }
 
     return status;
 }

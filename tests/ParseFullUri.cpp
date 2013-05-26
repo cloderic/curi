@@ -43,7 +43,7 @@ struct URI
     std::string path;
     std::vector<std::string> pathSegments;
     std::string query;
-    std::vector<std::string> queryItems; 
+    std::map<std::string, std::string> queryItems; 
     std::string fragment;
 
     void clear()
@@ -152,11 +152,13 @@ int query(void* userData, const char* query, size_t queryLen)
     return 1;
 }
 
-int queryItem(void* userData, const char* queryItem, size_t queryItemLen)
+int queryItem(void* userData, const char* queryItemKey, size_t queryItemKeyLen, const char* queryItemValue, size_t queryItemValueLen)
 {
-    CAPTURE(queryItem);
-    CAPTURE(queryItemLen);
-    static_cast<URI*>(userData)->queryItems.push_back(std::string(queryItem,queryItemLen));
+    CAPTURE(queryItemKey);
+    CAPTURE(queryItemKeyLen);
+    CAPTURE(queryItemValue);
+    CAPTURE(queryItemValueLen);
+    static_cast<URI*>(userData)->queryItems[std::string(queryItemKey,queryItemKeyLen)] = std::string(queryItemValue, queryItemValueLen);
     return 1;
 }
 
@@ -204,6 +206,9 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "over");
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
+        CHECK(uri.queryItems.size() == 1);
+        CHECK(uri.queryItems.begin()->first == "name");
+        CHECK(uri.queryItems.begin()->second == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -228,7 +233,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems[0] == "name=ferret");
+        CHECK(uri.queryItems.begin()->first == "name");
+        CHECK(uri.queryItems.begin()->second == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -253,7 +259,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems[0] == "name=ferret");
+        CHECK(uri.queryItems.begin()->first == "name");
+        CHECK(uri.queryItems.begin()->second == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -281,7 +288,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
         CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems[0] == "name=ferret");
+        CHECK(uri.queryItems.begin()->first == "name");
+        CHECK(uri.queryItems.begin()->second == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -371,8 +379,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "c=GB");
         CHECK(uri.query == "objectClass?one");
         CHECK(uri.queryItems.size() == 2);
-        CHECK(uri.queryItems[0] == "objectClass");
-        CHECK(uri.queryItems[1] == "one");
+        CHECK(uri.queryItems.begin()->first == "objectClass");
+        CHECK(uri.queryItems.begin()->second.empty());
+        CHECK((++uri.queryItems.begin())->first == "one");
+        CHECK((++uri.queryItems.begin())->second.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -500,7 +510,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "brac[kets]:love{the|pipe}");
         CHECK(uri.query == "don't you think");
         CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems[0] == "don't you think");
+        CHECK(uri.queryItems.begin()->first == "don't you think");
+        CHECK(uri.queryItems.begin()->second.empty());
         CHECK(uri.fragment == "c:\\Program Files");
 
         CHECK(uri.allocatedMemory == sizeof(char)*(
@@ -510,6 +521,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
             strlen("brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
             strlen("don%27t+you+think") + 1 +
             strlen("don%27t+you+think") + 1 +
+            + 1 +
             strlen("c%3A%5CProgram%20Files") + 1));
 
         CHECK(uri.deallocatedMemory == uri.allocatedMemory);
@@ -586,9 +598,9 @@ TEST_CASE("ParseFullUri/Success/Query", "Valid URIs, query focus")
 
         CHECK(uri.query == "tutu=foo&toto=bar&titi=baz");
         CHECK(uri.queryItems.size() == 3);
-        CHECK(uri.queryItems[0] == "tutu=foo");
-        CHECK(uri.queryItems[1] == "toto=bar");
-        CHECK(uri.queryItems[2] == "titi=baz");
+        CHECK(uri.queryItems["tutu"] == "foo");
+        CHECK(uri.queryItems["toto"] == "bar");
+        CHECK(uri.queryItems["titi"] == "baz");
     }
 }
 
@@ -628,6 +640,11 @@ TEST_CASE("ParseFullUri/Error/Scheme", "Bad URIs, scheme focus")
 extern "C"
 {
     static int cancellingCallbackStr(void* userData, const char* str, size_t strLen)
+    {
+        return 0;
+    }
+
+    static int cancellingCallbackTwoStr(void* userData, const char* str1, size_t str1Len, const char* str2, size_t str2Len)
     {
         return 0;
     }
@@ -709,7 +726,7 @@ TEST_CASE("ParseFullUri/Cancelled", "Canceled parsing of URI")
     SECTION("QueryItem", "")
     {
         curi_default_settings(&settings);
-        settings.query_item_callback = cancellingCallbackStr;
+        settings.query_item_callback = cancellingCallbackTwoStr;
 
         CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
     }
