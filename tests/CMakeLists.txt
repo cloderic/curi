@@ -3,7 +3,11 @@ include_directories(
     catch
 )
 
-add_executable(curi_tests Settings.cpp ParseFullUri.cpp UrlDecode.cpp)
+add_executable(curi_tests 
+  Settings.cpp
+  ParseFullUri.cpp 
+  ParsePath.cpp
+  UrlDecode.cpp)
 
 target_link_libraries(curi_tests curi)
 

@@ -1280,6 +1280,7 @@ static curi_status parse_full_uri(const char* uri, size_t len, size_t* offset, c
 
     return status;
 }
+
 curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
 {
     size_t offset = 0;
@@ -1309,6 +1310,38 @@ curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings
 curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
 {
     return curi_parse_full_uri(uri, SIZE_MAX, settings, userData);
+}
+
+curi_status curi_parse_path(const char* path, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
+{
+    size_t offset = 0;
+    curi_status status;
+    
+    if (settings)
+    {
+        // parsing with the given settings
+        status = parse_path_abempty(path, len, &offset, settings, userData); 
+    }
+    else
+    {
+        curi_settings defaultSettings;
+        curi_default_settings(&defaultSettings);
+        // parsing with default settings
+        status = parse_path_abempty(path, len, &offset, &defaultSettings, userData); 
+    }
+
+    if (status == curi_status_success && *read_char(path, len, &offset) != '\0')
+        // the URI weren't fully consumed
+        // TODO: set an error string somewhere
+        status = curi_status_error;
+
+    return status; 
+}
+
+
+curi_status curi_parse_path_nt(const char* path, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
+{
+    return curi_parse_path(path, SIZE_MAX, settings, userData);
 }
 
 curi_status curi_url_decode(const char* input, size_t inputLen, char* output, size_t outputCapacity, size_t* outputLen /*=0*/)
