@@ -74,7 +74,7 @@ curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings
 
 /** Parse the given NULL-terminated string as a URI path.
 
-    \note This function doesn't do compute `strlen(uri)`, it calls `curi_parse_path`
+    \note This function doesn't do compute `strlen(path)`, it calls `curi_parse_path`
     with a length set to SIZE_MAX.
 */
 curi_status curi_parse_path_nt(const char* path, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
@@ -87,6 +87,20 @@ curi_status curi_parse_path_nt(const char* path, const curi_settings* settings /
 */
 curi_status curi_parse_path(const char* path, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
+/** Parse the given NULL-terminated string as a URI query.
+
+    \note This function doesn't do compute `strlen(query)`, it calls `curi_parse_query`
+    with a length set to SIZE_MAX.
+*/
+curi_status curi_parse_query_nt(const char* query, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
+
+/** Parse the given string as a URI query specifying its length. 
+
+    \note In practice the parsing ends once the given length is reached or a 
+    NULL-character ('\0') is read, making this function working for NULL-terminated 
+    string as well.
+*/
+curi_status curi_parse_query(const char* query, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
 /** URL Decode the given string.
     

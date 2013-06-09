@@ -1,8 +1,8 @@
 *Work in progress*
 
-# CURI - a tiny C URI parser #
+# CURI - a tiny URI parser written in C #
 
-A URI C parser respecting [RFC-3986](http://tools.ietf.org/html/rfc3986), inspired by [yajl](http://lloyd.github.io/yajl/), tested with [catch](https://github.com/philsquared/Catch).
+A URI parser respecting [RFC-3986](http://tools.ietf.org/html/rfc3986), inspired by [yajl](http://lloyd.github.io/yajl/), tested with [catch](https://github.com/philsquared/Catch).
 
 ## Compilers ##
 

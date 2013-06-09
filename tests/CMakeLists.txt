@@ -7,6 +7,7 @@ add_executable(curi_tests
   Settings.cpp
   ParseFullUri.cpp 
   ParsePath.cpp
+  ParseQuery.cpp
   UrlDecode.cpp)
 
 target_link_libraries(curi_tests curi)

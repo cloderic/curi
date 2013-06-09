@@ -1162,7 +1162,7 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
     return status;
 }
 
-static curi_status parse_query(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+static curi_status parse_query(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData, int parseSeparator)
 {
     // If not interested in individual items,
     //      query = "?" *query_fragment_char
@@ -1174,7 +1174,7 @@ static curi_status parse_query(const char* uri, size_t len, size_t* offset, cons
 
     size_t queryStartOffset;
 
-    if (status == curi_status_success)
+    if (parseSeparator && status == curi_status_success)
         status = parse_char('?', uri, len, offset, settings, userData);
 
     queryStartOffset = *offset;
@@ -1270,7 +1270,7 @@ static curi_status parse_full_uri(const char* uri, size_t len, size_t* offset, c
         status = parse_hier_part(uri, len, offset, settings, userData);
 
     if (status == curi_status_success)
-        TRY(status, offset, parse_query(uri, len, offset, settings, userData));
+        TRY(status, offset, parse_query(uri, len, offset, settings, userData, 1));
 
     if (status == curi_status_success)
         TRY(status, offset, parse_fragment(uri, len, offset, settings, userData));
@@ -1328,7 +1328,7 @@ curi_status curi_parse_path(const char* path, size_t len, const curi_settings* s
     }
 
     if (status == curi_status_success && *read_char(path, len, &offset) != '\0')
-        // the URI weren't fully consumed
+        // the imput weren't fully consumed
         // TODO: set an error string somewhere
         status = curi_status_error;
 
@@ -1339,6 +1339,37 @@ curi_status curi_parse_path(const char* path, size_t len, const curi_settings* s
 curi_status curi_parse_path_nt(const char* path, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
 {
     return curi_parse_path(path, SIZE_MAX, settings, userData);
+}
+
+curi_status curi_parse_query(const char* query, size_t len, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
+{
+    size_t offset = 0;
+    curi_status status;
+    
+    if (settings)
+    {
+        // parsing with the given settings
+        status = parse_query(query, len, &offset, settings, userData, 0); 
+    }
+    else
+    {
+        curi_settings defaultSettings;
+        curi_default_settings(&defaultSettings);
+        // parsing with default settings
+        status = parse_query(query, len, &offset, &defaultSettings, userData, 0); 
+    }
+
+    if (status == curi_status_success && *read_char(query, len, &offset) != '\0')
+        // the imput weren't fully consumed
+        // TODO: set an error string somewhere
+        status = curi_status_error;
+
+    return status;
+}
+
+curi_status curi_parse_query_nt(const char* query, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
+{
+    return curi_parse_query(query, SIZE_MAX, settings, userData);
 }
 
 curi_status curi_url_decode(const char* input, size_t inputLen, char* output, size_t outputCapacity, size_t* outputLen /*=0*/)
