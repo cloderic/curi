@@ -67,6 +67,8 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.deallocatedMemory == 0);
     }
 
+    uri.clear();
+
     SECTION("Relative", "")
     {
         const std::string pathStr("foo/bar/baz");
@@ -89,6 +91,8 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
     }
+
+    uri.clear();
 
     SECTION("EmptySegment", "")
     {
@@ -114,6 +118,83 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
     }
 
     uri.clear();
+
+    SECTION("UrlDecode", "")
+    {
+        settings.url_decode = 1;
+
+        const std::string pathStr("liz+taylor/is%20f%23%26ing%20very/rich");
+
+        CHECK(curi_status_success == curi_parse_path(pathStr.c_str(), pathStr.length(), &settings, &uri));
+
+        CHECK(uri.scheme.empty());
+        CHECK(uri.userinfo.empty());
+        CHECK(uri.host.empty());
+        CHECK(uri.portStr.empty());
+        CHECK(uri.port == 0);
+        CHECK(uri.path == "liz taylor/is f#&ing very/rich");
+        CHECK(uri.pathSegments.size() == 3);
+        CHECK(uri.pathSegments[0] == "liz taylor");
+        CHECK(uri.pathSegments[1] == "is f#&ing very");
+        CHECK(uri.pathSegments[2] == "rich");
+        CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
+        CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == sizeof(char)*(
+            strlen("liz+taylor/is%20f%23%26ing%20very/rich") + 1 + 
+            strlen("liz+taylor") + 1 + 
+            strlen("is%20f%23%26ing%20very") + 1 + 
+            strlen("rich") + 1));
+        CHECK(uri.deallocatedMemory == uri.deallocatedMemory);
+
+        settings.url_decode = 0;
+    }
+
+    uri.clear();
+}
+
+TEST_CASE("ParsePath/RetrieveOnlySegments", "Valid pathes")
+{
+    curi_settings settings;
+    curi_default_settings(&settings);
+    settings.allocate = test_allocate;
+    settings.deallocate = test_deallocate;
+    settings.path_segment_callback = pathSegment;
+
+    URI uri;
+    uri.clear();
+
+    SECTION("UrlDecode", "")
+    {
+        settings.url_decode = 1;
+
+        const std::string pathStr("liz+taylor/is%20f%23%26ing%20very/rich");
+
+        CHECK(curi_status_success == curi_parse_path(pathStr.c_str(), pathStr.length(), &settings, &uri));
+
+        CHECK(uri.scheme.empty());
+        CHECK(uri.userinfo.empty());
+        CHECK(uri.host.empty());
+        CHECK(uri.portStr.empty());
+        CHECK(uri.port == 0);
+        CHECK(uri.path.empty());
+        CHECK(uri.pathSegments.size() == 3);
+        CHECK(uri.pathSegments[0] == "liz taylor");
+        CHECK(uri.pathSegments[1] == "is f#&ing very");
+        CHECK(uri.pathSegments[2] == "rich");
+        CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
+        CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == sizeof(char)*(
+            strlen("liz+taylor") + 1 + 
+            strlen("is%20f%23%26ing%20very") + 1 + 
+            strlen("rich") + 1));
+        CHECK(uri.deallocatedMemory == uri.deallocatedMemory);
+
+        settings.url_decode = 0;
+    }
+
+     uri.clear();
 }
 
 TEST_CASE("ParsePath/Cancelled", "Canceled parsing of path")
