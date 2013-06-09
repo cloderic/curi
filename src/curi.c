@@ -875,13 +875,18 @@ static curi_status parse_pchars(const char* uri, size_t len, size_t* offset, con
 }
 
 
-static curi_status parse_segment(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+static curi_status parse_segment(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData, int notEmpty)
 {
     // segment = pchars
+    // segment-not-empty = pchar pchars
     const size_t initialOffset = *offset;
     curi_status status = curi_status_success;
 
-    status = parse_pchars(uri, len, offset, settings, userData);
+    if (notEmpty && status == curi_status_success)
+        status = parse_pchar(uri, len, offset, settings, userData);
+
+    if (status == curi_status_success)
+        status = parse_pchars(uri, len, offset, settings, userData);
 
     if (status == curi_status_success)
         status = handle_path_segment(uri + initialOffset, *offset - initialOffset, settings, userData);
@@ -903,7 +908,7 @@ static curi_status parse_segments(const char* uri, size_t len, size_t* offset, c
             tryStatus = parse_char('/', uri, len, offset, settings, userData);
 
         if (tryStatus == curi_status_success)
-            tryStatus = parse_segment(uri, len, offset, settings, userData);
+            tryStatus = parse_segment(uri, len, offset, settings, userData, 0);
 
         if (tryStatus == curi_status_error)
         {
@@ -917,9 +922,9 @@ static curi_status parse_segments(const char* uri, size_t len, size_t* offset, c
     return status;
 }
 
-static curi_status parse_path_abempty(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+static curi_status parse_path_absolute_or_empty(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // path-abempty  = *( "/" segment )
+    // path-absolute-or-empty  = segments
     const size_t initialOffset = *offset;
 
     curi_status status = parse_segments(uri, len, offset, settings, userData);
@@ -930,27 +935,9 @@ static curi_status parse_path_abempty(const char* uri, size_t len, size_t* offse
     return status;
 }
 
-static curi_status parse_segment_nz(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
-{
-    // segment-nz = pchar pchars
-    const size_t initialOffset = *offset;
-    curi_status status = curi_status_success;
-
-    if (status == curi_status_success)
-        status = parse_pchar(uri, len, offset, settings, userData);
-
-    if (status == curi_status_success)
-        status = parse_pchars(uri, len, offset, settings, userData);
-
-    if (status == curi_status_success)
-        status = handle_path_segment(uri + initialOffset, *offset - initialOffset, settings, userData);
-
-    return status;
-}
-
 static curi_status parse_path_absolute(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // path-absolute = "/" [ segment-nz *( "/" segment ) ]
+    // path-absolute = "/" [ segment-not-empty segments ]
     const size_t initialOffset = *offset;
     curi_status status = curi_status_success;
 
@@ -963,7 +950,7 @@ static curi_status parse_path_absolute(const char* uri, size_t len, size_t* offs
         curi_status tryStatus = curi_status_success;
 
         if (tryStatus == curi_status_success)
-            tryStatus = parse_segment_nz(uri, len, offset, settings, userData);
+            tryStatus = parse_segment(uri, len, offset, settings, userData, 1);
 
         if (tryStatus == curi_status_success)
             tryStatus = parse_segments(uri, len, offset, settings, userData);
@@ -980,10 +967,9 @@ static curi_status parse_path_absolute(const char* uri, size_t len, size_t* offs
     return status;
 }
 
-static curi_status parse_path_rootless(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+static curi_status parse_path_relative(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // path-rootless = segment-nz *( "/" segment )
-
+    // path-relative = segment-not-empty segments
     const size_t initialOffset = *offset;
     curi_status status = curi_status_success;
 
@@ -993,7 +979,7 @@ static curi_status parse_path_rootless(const char* uri, size_t len, size_t* offs
         curi_status tryStatus = curi_status_success;
 
         if (tryStatus == curi_status_success)
-            tryStatus = parse_segment_nz(uri, len, offset, settings, userData);
+            tryStatus = parse_segment(uri, len, offset, settings, userData, 1);
 
         if (tryStatus == curi_status_success)
             tryStatus = parse_segments(uri, len, offset, settings, userData);
@@ -1016,12 +1002,29 @@ static curi_status parse_path_empty(const char* uri, size_t len, size_t* offset,
     return curi_status_success;
 }
 
+static curi_status parse_path(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
+{
+    // path = path-absolute
+    //      / path-relative
+    //      / path-empty
+    curi_status status = curi_status_error;
+
+    if (status == curi_status_error)
+        TRY(status,offset,parse_path_absolute(uri, len, offset, settings, userData));
+
+    if (status == curi_status_error)
+        TRY(status,offset,parse_path_relative(uri, len, offset, settings, userData));
+
+    if (status == curi_status_error)
+        TRY(status,offset,parse_path_empty(uri, len, offset, settings, userData));
+    
+    return status;
+}
+
 static curi_status parse_hier_part(const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userData)
 {
-    // hier-part = "//" authority path-abempty
-    //             / path-absolute
-    //             / path-rootless
-    //             / path-empty
+    // hier-part = "//" authority path-absolute-or-empty
+    //             / path
     curi_status status = curi_status_error;
 
     if (status == curi_status_error)
@@ -1035,7 +1038,7 @@ static curi_status parse_hier_part(const char* uri, size_t len, size_t* offset, 
         if (tryStatus == curi_status_success)
             tryStatus = parse_authority(uri, len, offset, settings, userData);
         if (tryStatus == curi_status_success)
-            tryStatus = parse_path_abempty(uri, len, offset, settings, userData);
+            tryStatus = parse_path_absolute_or_empty(uri, len, offset, settings, userData);
         if (tryStatus == curi_status_error)
             *offset = initialOffset;
         else
@@ -1043,13 +1046,7 @@ static curi_status parse_hier_part(const char* uri, size_t len, size_t* offset, 
     }
     
     if (status == curi_status_error)
-        TRY(status,offset,parse_path_absolute(uri, len, offset, settings, userData));
-
-    if (status == curi_status_error)
-        TRY(status,offset,parse_path_rootless(uri, len, offset, settings, userData));
-
-    if (status == curi_status_error)
-        TRY(status,offset,parse_path_empty(uri, len, offset, settings, userData));
+        TRY(status,offset,parse_path(uri, len, offset, settings, userData));
     
     return status;
 }
@@ -1320,14 +1317,14 @@ curi_status curi_parse_path(const char* path, size_t len, const curi_settings* s
     if (settings)
     {
         // parsing with the given settings
-        status = parse_path_abempty(path, len, &offset, settings, userData); 
+        status = parse_path(path, len, &offset, settings, userData); 
     }
     else
     {
         curi_settings defaultSettings;
         curi_default_settings(&defaultSettings);
         // parsing with default settings
-        status = parse_path_abempty(path, len, &offset, &defaultSettings, userData); 
+        status = parse_path(path, len, &offset, &defaultSettings, userData); 
     }
 
     if (status == curi_status_success && *read_char(path, len, &offset) != '\0')

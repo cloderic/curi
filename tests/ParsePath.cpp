@@ -67,6 +67,52 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.deallocatedMemory == 0);
     }
 
+    SECTION("Relative", "")
+    {
+        const std::string pathStr("foo/bar/baz");
+
+        CHECK(curi_status_success == curi_parse_path_nt(pathStr.c_str(), &settings, &uri));
+
+        CHECK(uri.scheme.empty());
+        CHECK(uri.userinfo.empty());
+        CHECK(uri.host.empty());
+        CHECK(uri.portStr.empty());
+        CHECK(uri.port == 0);
+        CHECK(uri.path == "foo/bar/baz");
+        CHECK(uri.pathSegments.size() == 3);
+        CHECK(uri.pathSegments[0] == "foo");
+        CHECK(uri.pathSegments[1] == "bar");
+        CHECK(uri.pathSegments[2] == "baz");
+        CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
+        CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
+    }
+
+    SECTION("EmptySegment", "")
+    {
+        const std::string pathStr("/foo//bar/baz");
+
+        CHECK(curi_status_success == curi_parse_path_nt(pathStr.c_str(), &settings, &uri));
+
+        CHECK(uri.scheme.empty());
+        CHECK(uri.userinfo.empty());
+        CHECK(uri.host.empty());
+        CHECK(uri.portStr.empty());
+        CHECK(uri.port == 0);
+        CHECK(uri.path == "/foo//bar/baz");
+        CHECK(uri.pathSegments.size() == 3);
+        CHECK(uri.pathSegments[0] == "foo");
+        CHECK(uri.pathSegments[1] == "bar");
+        CHECK(uri.pathSegments[2] == "baz");
+        CHECK(uri.query.empty());
+        CHECK(uri.queryItems.empty());
+        CHECK(uri.fragment.empty());
+        CHECK(uri.allocatedMemory == 0);
+        CHECK(uri.deallocatedMemory == 0);
+    }
+
     uri.clear();
 }
 
