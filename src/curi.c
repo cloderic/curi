@@ -18,6 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifdef _MSC_VER
+#   pragma warning(push) 
+#   pragma warning(disable: 4100) // Disabling the 'unreferenced formal parameter' visual studio warning
+#endif
+
 #include "curi.h"
 
 #include <assert.h>
@@ -1516,3 +1521,7 @@ curi_status curi_url_decode_nt(const char* input, char* output, size_t outputCap
 {
     return curi_url_decode(input, SIZE_MAX, output, outputCapacity, outputLen);
 }
+
+#ifdef _MSC_VER
+#   pragma warning(pop)
+#endif
