@@ -26,5 +26,13 @@ add_test(
   COMMAND curi_tests -t ParseFullUri/*)
 
 add_test(
+  NAME ParseQuery 
+  COMMAND curi_tests -t ParseQuery/*)
+
+add_test(
+  NAME ParsePath 
+  COMMAND curi_tests -t ParsePath/*)
+
+add_test(
   NAME UrlDecode 
   COMMAND curi_tests -t UrlDecode/*)
