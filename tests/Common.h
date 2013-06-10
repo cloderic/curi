@@ -167,8 +167,11 @@ inline int queryItem(void* userData, const char* queryItemKey, size_t queryItemK
 {
     CAPTURE(queryItemKey);
     CAPTURE(queryItemKeyLen);
-    CAPTURE(queryItemValue);
-    CAPTURE(queryItemValueLen);
+    if (queryItemValue)
+    {
+        CAPTURE(queryItemValue);
+        CAPTURE(queryItemValueLen);
+    }
     static_cast<URI*>(userData)->queryItems[std::string(queryItemKey,queryItemKeyLen)] = std::string(queryItemValue, queryItemValueLen);
     return 1;
 }

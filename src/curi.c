@@ -155,7 +155,7 @@ static curi_status handle_query_item(const char* key, size_t keyLen, const char*
             char* urlDecodedKey = (char*)settings->allocate(userData, keyAllocationSize);
 
             size_t valueAllocationSize = (valueLen+1) * sizeof(char);
-            size_t urlDecodedValueLen;
+            size_t urlDecodedValueLen = 0;
             char* urlDecodedValue = (char*)settings->allocate(userData, valueAllocationSize);
             
             status = curi_url_decode(key, keyLen, urlDecodedKey, keyLen+1, &urlDecodedKeyLen);
@@ -788,7 +788,7 @@ static curi_status parse_port(const char* uri, size_t len, size_t* offset, const
     // port = *DIGIT
     const size_t initialOffset = *offset;
 
-    while (1)
+    for ( ; ; )
     {
         size_t subOffset = *offset;
         curi_status subStatus = parse_digit(uri, len, &subOffset, settings, userData);
@@ -899,7 +899,7 @@ static curi_status parse_segments(const char* uri, size_t len, size_t* offset, c
     // segments  = *( "/" segment )
     curi_status status = curi_status_success;
 
-    while (1)
+    for ( ; ; )
     {
         size_t initialOffset = *offset;
         curi_status tryStatus = curi_status_success;
@@ -1083,6 +1083,7 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
     // query_item_value = *query_fragment_char (but no query_item_separator)
 
     const size_t keyStartOffset = *offset;
+    size_t keyEndOffset;
 
     curi_status status = curi_status_success;
     while (status == curi_status_success)
@@ -1112,9 +1113,9 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
         
         if (status != curi_status_success)
             *offset = previousOffset;
-    }
+    };
 
-    const size_t keyEndOffset = *offset;
+    keyEndOffset = *offset;
 
     status = parse_char(settings->query_item_key_separator, uri, len, offset, settings, userData);
     
