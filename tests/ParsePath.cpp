@@ -38,7 +38,6 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
     settings.path_callback = path;
     settings.path_segment_callback = pathSegment;
     settings.query_callback = query;
-    settings.query_item_callback = queryItem;
     settings.fragment_callback = fragment;
 
     URI uri;
@@ -61,7 +60,6 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.pathSegments[1] == "bar");
         CHECK(uri.pathSegments[2] == "baz");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -86,7 +84,6 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.pathSegments[1] == "bar");
         CHECK(uri.pathSegments[2] == "baz");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -111,7 +108,6 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.pathSegments[1] == "bar");
         CHECK(uri.pathSegments[2] == "baz");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -138,7 +134,6 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.pathSegments[1] == "is f#&ing very");
         CHECK(uri.pathSegments[2] == "rich");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == sizeof(char)*(
             strlen("liz+taylor/is%20f%23%26ing%20very/rich") + 1 + 
@@ -183,7 +178,6 @@ TEST_CASE("ParsePath/RetrieveOnlySegments", "Valid pathes")
         CHECK(uri.pathSegments[1] == "is f#&ing very");
         CHECK(uri.pathSegments[2] == "rich");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == sizeof(char)*(
             strlen("liz+taylor") + 1 + 
@@ -269,7 +263,7 @@ TEST_CASE("ParsePath/Cancelled", "Canceled parsing of path")
     SECTION("QueryItem", "")
     {
         curi_default_settings(&settings);
-        settings.query_item_callback = cancellingCallbackTwoStr;
+        settings.query_item_str_callback = cancellingCallbackTwoStr;
 
         CHECK(curi_status_success == curi_parse_path(pathStr.c_str(), pathStr.length(), &settings, 0));
     }

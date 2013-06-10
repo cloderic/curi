@@ -47,7 +47,10 @@ typedef struct
     int (*path_callback)(void* userData, const char* path, size_t pathLen); //!< if not-NULL, called with the parsed path (default is NULL).
     int (*path_segment_callback)(void* userData, const char* pathSegment, size_t pathSegmentLen); //!< if not-NULL, called with the parsed path segment (default is NULL).
     int (*query_callback)(void* userData, const char* query, size_t queryLen); //!< if not-NULL, called with the parsed query (default is NULL).
-    int (*query_item_callback)(void* userData, const char* queryItemKey, size_t queryItemKeyLen, const char* queryItemValue, size_t queryItemValueLen); //!< if not-NULL, called with each of the parsed query items (default is NULL).
+    int (*query_item_null_callback)(void* userData, const char* queryItemKey, size_t queryItemKeyLen); //!< if not-NULL, called with each of the parsed query items having no value (default is NULL).
+    int (*query_item_int_callback)(void* userData, const char* queryItemKey, size_t queryItemKeyLen, long int queryItemValue); //!< if not-NULL, called with each of the parsed query items having an int value (default is NULL).
+    int (*query_item_double_callback)(void* userData, const char* queryItemKey, size_t queryItemKeyLen, double queryItemValue); //!< if not-NULL, called with each of the parsed query items having an double value (default is NULL).
+    int (*query_item_str_callback)(void* userData, const char* queryItemKey, size_t queryItemKeyLen, const char* queryItemValue, size_t queryItemValueLen); //!< if not-NULL, called with each of the parsed query items that hasn't been handled by the previous callbacks (default is NULL).
     char query_item_separator; //!< the character separating query items (default is '&').
     char query_item_key_separator; //!< the character separating, in query items, the key from the value (default is '=').
     int (*fragment_callback)(void* userData, const char* fragment, size_t fragmentLen); //!< if not-NULL, called with the parsed fragment (default is NULL).

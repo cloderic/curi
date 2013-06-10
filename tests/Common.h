@@ -42,7 +42,10 @@ struct URI
     std::string path;
     std::vector<std::string> pathSegments;
     std::string query;
-    std::map<std::string, std::string> queryItems; 
+    std::set<std::string> queryNullItems; 
+    std::map<std::string, std::string> queryStrItems;
+    std::map<std::string, long int> queryIntItems; 
+    std::map<std::string, double> queryDoubleItems; 
     std::string fragment;
 
     void clear()
@@ -57,6 +60,10 @@ struct URI
         path.clear();
         pathSegments.clear();
         query.clear();
+        queryNullItems.clear();
+        queryStrItems.clear();
+        queryIntItems.clear();
+        queryDoubleItems.clear();
         fragment.clear();
     }
 };
@@ -72,7 +79,10 @@ extern "C"
     static int path(void* userData, const char* path, size_t pathLen);
     static int pathSegment(void* userData, const char* pathSegment, size_t pathSegmentLen);
     static int query(void* userData, const char* query, size_t queryLen);
-    static int queryItem(void* userData, const char* queryItem, size_t queryItemLen);
+    static int queryNullItem(void* userData, const char* queryItem, size_t queryItemLen);
+    static int queryIntItem(void* userData, const char* queryItem, size_t queryItemLen, long int queryItemValue);
+    static int queryDoubleItem(void* userData, const char* queryItem, size_t queryItemLen, long int queryItemValue);
+    static int queryStrItem(void* userData, const char* queryItem, size_t queryItemLen, const char* queryValue, size_t queryValueLen);
     static int fragment(void* userData, const char* fragment, size_t fragmentLen);
     static int cancellingCallbackStr(void* userData, const char* str, size_t strLen)
     {
@@ -82,7 +92,15 @@ extern "C"
     {
         return 0;
     }
-    static int cancellingCallbackUint(void* userData, unsigned int port)
+    static int cancellingCallbackUint(void* userData, unsigned int uint)
+    {
+        return 0;
+    }
+    static int cancellingCallbackStrLongInt(void* userData, const char* str, size_t strLen, long int longint)
+    {
+        return 0;
+    }
+    static int cancellingCallbackStrDouble(void* userData, const char* str, size_t strLen, double dbl)
     {
         return 0;
     }
@@ -163,7 +181,33 @@ inline int query(void* userData, const char* query, size_t queryLen)
     return 1;
 }
 
-inline int queryItem(void* userData, const char* queryItemKey, size_t queryItemKeyLen, const char* queryItemValue, size_t queryItemValueLen)
+inline int queryNullItem(void* userData, const char* queryItemKey, size_t queryItemKeyLen)
+{
+    CAPTURE(queryItemKey);
+    CAPTURE(queryItemKeyLen);
+    static_cast<URI*>(userData)->queryNullItems.insert(std::string(queryItemKey,queryItemKeyLen));
+    return 1;
+}
+
+inline int queryIntItem(void* userData, const char* queryItemKey, size_t queryItemKeyLen, long int queryItemValue)
+{
+    CAPTURE(queryItemKey);
+    CAPTURE(queryItemKeyLen);
+    CAPTURE(queryItemValue);
+    static_cast<URI*>(userData)->queryIntItems[std::string(queryItemKey,queryItemKeyLen)] = queryItemValue;
+    return 1;
+}
+
+inline int queryDoubleItem(void* userData, const char* queryItemKey, size_t queryItemKeyLen, double queryItemValue)
+{
+    CAPTURE(queryItemKey);
+    CAPTURE(queryItemKeyLen);
+    CAPTURE(queryItemValue);
+    static_cast<URI*>(userData)->queryDoubleItems[std::string(queryItemKey,queryItemKeyLen)] = queryItemValue;
+    return 1;
+}
+
+inline int queryStrItem(void* userData, const char* queryItemKey, size_t queryItemKeyLen, const char* queryItemValue, size_t queryItemValueLen)
 {
     CAPTURE(queryItemKey);
     CAPTURE(queryItemKeyLen);
@@ -172,7 +216,7 @@ inline int queryItem(void* userData, const char* queryItemKey, size_t queryItemK
         CAPTURE(queryItemValue);
         CAPTURE(queryItemValueLen);
     }
-    static_cast<URI*>(userData)->queryItems[std::string(queryItemKey,queryItemKeyLen)] = std::string(queryItemValue, queryItemValueLen);
+    static_cast<URI*>(userData)->queryStrItems[std::string(queryItemKey,queryItemKeyLen)] = std::string(queryItemValue, queryItemValueLen);
     return 1;
 }
 

@@ -45,7 +45,7 @@ TEST_CASE("Settings/Default", "default settings")
     CHECK(!settings.path_callback);
     CHECK(!settings.path_segment_callback);
     CHECK(!settings.query_callback);
-    CHECK(!settings.query_item_callback);
+    CHECK(!settings.query_item_str_callback);
     CHECK(settings.query_item_separator == '&');
     CHECK(settings.query_item_key_separator == '=');
     CHECK(!settings.fragment_callback);

@@ -38,7 +38,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
     settings.path_callback = path;
     settings.path_segment_callback = pathSegment;
     settings.query_callback = query;
-    settings.query_item_callback = queryItem;
+    settings.query_item_null_callback = queryNullItem;
+    settings.query_item_int_callback = queryIntItem;
+    settings.query_item_double_callback = queryDoubleItem;
+    settings.query_item_str_callback = queryStrItem;
     settings.fragment_callback = fragment;
 
     URI uri;
@@ -60,9 +63,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "over");
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
-        CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems.begin()->first == "name");
-        CHECK(uri.queryItems.begin()->second == "ferret");
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.size() == 1);
+        CHECK(uri.queryStrItems["name"] == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -85,10 +90,12 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 2);
         CHECK(uri.pathSegments[0] == "over");
         CHECK(uri.pathSegments[1] == "there");
-        CHECK(uri.query == "name=ferret");
-        CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems.begin()->first == "name");
-        CHECK(uri.queryItems.begin()->second == "ferret");
+         CHECK(uri.query == "name=ferret");
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.size() == 1);
+        CHECK(uri.queryStrItems["name"] == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -112,9 +119,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "over");
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
-        CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems.begin()->first == "name");
-        CHECK(uri.queryItems.begin()->second == "ferret");
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.size() == 1);
+        CHECK(uri.queryStrItems["name"] == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -141,9 +150,11 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.pathSegments[1] == "there");
         CHECK(uri.query == "name=ferret");
-        CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems.begin()->first == "name");
-        CHECK(uri.queryItems.begin()->second == "ferret");
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.size() == 1);
+        CHECK(uri.queryStrItems["name"] == "ferret");
         CHECK(uri.fragment == "nose");
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -164,7 +175,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "foo.xml");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -186,7 +200,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "rfc");
         CHECK(uri.pathSegments[1] == "rfc1808.txt");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -208,7 +225,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments[0] == "rfc");
         CHECK(uri.pathSegments[1] == "rfc2396.txt");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -232,11 +252,12 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "c=GB");
         CHECK(uri.query == "objectClass?one");
-        CHECK(uri.queryItems.size() == 2);
-        CHECK(uri.queryItems.begin()->first == "objectClass");
-        CHECK(uri.queryItems.begin()->second.empty());
-        CHECK((++uri.queryItems.begin())->first == "one");
-        CHECK((++uri.queryItems.begin())->second.empty());
+        CHECK(uri.queryNullItems.size() == 2);
+        CHECK(*uri.queryNullItems.begin() == "objectClass");
+        CHECK(*(++uri.queryNullItems.begin()) == "one");
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -257,7 +278,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "John.Doe@example.com");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -278,7 +302,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "comp.infosystems.www.servers.unix");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -299,7 +326,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "+1-816-555-1212");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -319,7 +349,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.path == "/");
         CHECK(uri.pathSegments.empty());
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -340,7 +373,10 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "oasis:names:specification:docbook:dtd:xml:4.1.2");
         CHECK(uri.query.empty());
-        CHECK(uri.queryItems.empty());
+        CHECK(uri.queryNullItems.empty());
+        CHECK(uri.queryIntItems.empty());
+        CHECK(uri.queryDoubleItems.empty());
+        CHECK(uri.queryStrItems.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == 0);
         CHECK(uri.deallocatedMemory == 0);
@@ -363,9 +399,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.pathSegments.size() == 1);
         CHECK(uri.pathSegments[0] == "brac[kets]:love{the|pipe}");
         CHECK(uri.query == "don't you think");
-        CHECK(uri.queryItems.size() == 1);
-        CHECK(uri.queryItems.begin()->first == "don't you think");
-        CHECK(uri.queryItems.begin()->second.empty());
+        CHECK(uri.queryNullItems.size() == 1);
+        CHECK(*uri.queryNullItems.begin() == "don't you think");
         CHECK(uri.fragment == "c:\\Program Files");
 
         CHECK(uri.allocatedMemory == sizeof(char)*(
@@ -375,7 +410,6 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
             strlen("brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
             strlen("don%27t+you+think") + 1 +
             strlen("don%27t+you+think") + 1 +
-            + 1 +
             strlen("c%3A%5CProgram%20Files") + 1));
 
         CHECK(uri.deallocatedMemory == uri.allocatedMemory);
@@ -440,21 +474,28 @@ TEST_CASE("ParseFullUri/Success/Query", "Valid URIs, query focus")
     curi_settings settings;
     curi_default_settings(&settings);
     settings.query_callback = query;
-    settings.query_item_callback = queryItem;
+    settings.query_item_null_callback = queryNullItem;
+    settings.query_item_int_callback = queryIntItem;
+    settings.query_item_double_callback = queryDoubleItem;
+    settings.query_item_str_callback = queryStrItem;
 
     URI uri;
 
     SECTION("MultipleItems", "")
     {
-        const std::string uriStr("ssh2:my/taylor/is/rich?tutu=foo&toto=bar&titi=baz");
+        const std::string uriStr("ssh2:my/taylor/is/rich?tutu=foo&toto=2&titi=2.5&tata");
 
         CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
-        CHECK(uri.query == "tutu=foo&toto=bar&titi=baz");
-        CHECK(uri.queryItems.size() == 3);
-        CHECK(uri.queryItems["tutu"] == "foo");
-        CHECK(uri.queryItems["toto"] == "bar");
-        CHECK(uri.queryItems["titi"] == "baz");
+        CHECK(uri.query == "tutu=foo&toto=2&titi=2.5&tata");
+        CHECK(uri.queryNullItems.size() == 1);
+        CHECK(*uri.queryNullItems.begin() == "tata");
+        CHECK(uri.queryStrItems.size() == 1);
+        CHECK(uri.queryStrItems["tutu"] == "foo");
+        CHECK(uri.queryIntItems.size() == 1);
+        CHECK(uri.queryIntItems["toto"] == 2);
+        CHECK(uri.queryDoubleItems.size() == 1);
+        CHECK(uri.queryDoubleItems["titi"] == 2.5);
     }
 }
 
@@ -493,7 +534,7 @@ TEST_CASE("ParseFullUri/Error/Scheme", "Bad URIs, scheme focus")
 
 TEST_CASE("ParseFullUri/Cancelled", "Canceled parsing of URI")
 {
-    const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
+    const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret&foo#nose");
     curi_settings settings;
 
     SECTION("Scheme", "")
@@ -560,10 +601,18 @@ TEST_CASE("ParseFullUri/Cancelled", "Canceled parsing of URI")
         CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
     }
 
-    SECTION("QueryItem", "")
+    SECTION("QueryItemNull", "")
     {
         curi_default_settings(&settings);
-        settings.query_item_callback = cancellingCallbackTwoStr;
+        settings.query_item_null_callback = cancellingCallbackStr;
+
+        CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
+    }
+
+    SECTION("QueryItemStr", "")
+    {
+        curi_default_settings(&settings);
+        settings.query_item_str_callback = cancellingCallbackTwoStr;
 
         CHECK(curi_status_canceled == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, 0));
     }

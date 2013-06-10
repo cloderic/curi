@@ -3,7 +3,8 @@ include_directories(
     catch
 )
 
-add_executable(curi_tests 
+add_executable(curi_tests
+  Common.h
   Settings.cpp
   ParseFullUri.cpp 
   ParsePath.cpp
