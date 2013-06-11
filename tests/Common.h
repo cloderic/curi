@@ -72,35 +72,35 @@ extern "C"
 {
     void* test_allocate(void* userData, size_t size);
     void test_deallocate(void* userData, void* ptr, size_t size);
-    static int scheme(void* userData, const char* scheme, size_t schemeLen);
-    static int userinfo(void* userData, const char* userinfo, size_t userinfoLen);
-    static int host(void* userData, const char* host, size_t hostLen);
-    static int portStr(void* userData, const char* port, size_t portLen);
-    static int path(void* userData, const char* path, size_t pathLen);
-    static int pathSegment(void* userData, const char* pathSegment, size_t pathSegmentLen);
-    static int query(void* userData, const char* query, size_t queryLen);
-    static int queryNullItem(void* userData, const char* queryItem, size_t queryItemLen);
-    static int queryIntItem(void* userData, const char* queryItem, size_t queryItemLen, long int queryItemValue);
-    static int queryDoubleItem(void* userData, const char* queryItem, size_t queryItemLen, long int queryItemValue);
-    static int queryStrItem(void* userData, const char* queryItem, size_t queryItemLen, const char* queryValue, size_t queryValueLen);
-    static int fragment(void* userData, const char* fragment, size_t fragmentLen);
-    static int cancellingCallbackStr(void* userData, const char* str, size_t strLen)
+    int scheme(void* userData, const char* scheme, size_t schemeLen);
+    int userinfo(void* userData, const char* userinfo, size_t userinfoLen);
+    int host(void* userData, const char* host, size_t hostLen);
+    int portStr(void* userData, const char* port, size_t portLen);
+    int path(void* userData, const char* path, size_t pathLen);
+    int pathSegment(void* userData, const char* pathSegment, size_t pathSegmentLen);
+    int query(void* userData, const char* query, size_t queryLen);
+    int queryNullItem(void* userData, const char* queryItem, size_t queryItemLen);
+    int queryIntItem(void* userData, const char* queryItem, size_t queryItemLen, long int queryItemValue);
+    int queryDoubleItem(void* userData, const char* queryItem, size_t queryItemLen, double queryItemValue);
+    int queryStrItem(void* userData, const char* queryItem, size_t queryItemLen, const char* queryValue, size_t queryValueLen);
+    int fragment(void* userData, const char* fragment, size_t fragmentLen);
+    inline int cancellingCallbackStr(void* userData, const char* str, size_t strLen)
     {
         return 0;
     }
-    static int cancellingCallbackTwoStr(void* userData, const char* str1, size_t str1Len, const char* str2, size_t str2Len)
+    inline int cancellingCallbackTwoStr(void* userData, const char* str1, size_t str1Len, const char* str2, size_t str2Len)
     {
         return 0;
     }
-    static int cancellingCallbackUint(void* userData, unsigned int uint)
+    inline int cancellingCallbackUint(void* userData, unsigned int uint)
     {
         return 0;
     }
-    static int cancellingCallbackStrLongInt(void* userData, const char* str, size_t strLen, long int longint)
+    inline int cancellingCallbackStrLongInt(void* userData, const char* str, size_t strLen, long int longint)
     {
         return 0;
     }
-    static int cancellingCallbackStrDouble(void* userData, const char* str, size_t strLen, double dbl)
+    inline int cancellingCallbackStrDouble(void* userData, const char* str, size_t strLen, double dbl)
     {
         return 0;
     }
