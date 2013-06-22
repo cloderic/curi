@@ -4,7 +4,7 @@ compiler:
     - clang
 install: 
     - sudo apt-get update -qq
-    - sudo apt-get install -qq doxygen
+    - sudo apt-get -t testing install -q doxygen
 script: 
     - cmake ./
     - make all
