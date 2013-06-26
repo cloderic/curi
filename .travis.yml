@@ -9,3 +9,6 @@ script:
     - cmake ./
     - make all
     - ctest --output-on-failure
+branches:
+  except:
+    - gh-pages
