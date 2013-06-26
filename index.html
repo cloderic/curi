@@ -34,11 +34,58 @@
 <div class="title">CURI Documentation</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><ul>
-<li><a class="el" href="group__parsing.html">URI parsing</a> implementing the <a href="http://tools.ietf.org/html/rfc3986">RFC-3986</a>;</li>
-<li><a class="el" href="group__url__decoding.html">URL-encoded strings decoding</a>.</li>
+<div class="textblock"><h2>Motivation</h2>
+<p>As the <a href="http://tools.ietf.org/html/rfc3986">RFC-3986</a> so poetically states, </p>
+<blockquote class="doxtable">
+<p>A Uniform Resource Identifier (URI) is a compact sequence of characters that identifies an abstract or physical resource.</p>
+<p></p>
+</blockquote>
+<p>Pretty vague, hu!</p>
+<p>For example, <a href="http://www.google.com/search?q=URI">http://www.google.com/search?q=URI</a> is a URI composed of:</p>
+<ul>
+<li>a <b>scheme</b>, <code>http</code>;</li>
+<li>a <b>host</b>, <code>www.google.com</code>;</li>
+<li>a <b>path</b>, <code>search</code>;</li>
+<li>and a <b>query</b>, <code>q=URI</code>.</li>
 </ul>
-<h1>Licence</h1>
+<p><b>curi</b> is able to parse this kind of query in sub-elements.</p>
+<p><b>curi</b> started as a week-end project to:</p>
+<ul>
+<li>do some C (it's always cool to go back to basics);</li>
+<li>try <a href="https://travis-ci.org/cloderic/curi">Travis</a>;</li>
+<li>try <a href="https://github.com/philsquared/Catch">Catch</a>.</li>
+</ul>
+<p>In the end, it is pretty stable and is even used in the next version of <a href="www.masalife.net">MASA LIFE</a>.</p>
+<h2>Using</h2>
+<p><b>curi</b> provides functions to <a class="el" href="group__parsing.html">parse URIs</a> and URI's paths and queries. It is an almost straight implementation of the <a href="http://tools.ietf.org/html/rfc3986">RFC-3986</a>. The only current limitation being a permissive IPv6 host parsing.</p>
+<p>Aside from that, <b>curi</b> also features <a class="el" href="group__url__decoding.html">URL-encoded strings decoding</a>, that is to say the ability to decode percent encoded strings.</p>
+<p>The best way to use <b>curi</b> in your C/C++ project is simply to include directly its sources in your project. Two files needs to be downloaded in their latest stable version:</p>
+<ul>
+<li><a href="https://github.com/cloderic/curi/blob/master/src/curi.h">curi.h</a>;</li>
+<li><a href="https://github.com/cloderic/curi/blob/master/src/curi.c">curi.c</a>.</li>
+</ul>
+<h3>Compatibility</h3>
+<p><b>curi</b> is written in Visual Studio compliant <b>C90</b>. It has been tested on several platforms including:</p>
+<ul>
+<li>Mac OS X Mountain Lion (x64),<ul>
+<li>clang 4.2 (clang-425.0.24);</li>
+</ul>
+</li>
+<li>Windows 7 (x86 &amp; x64),<ul>
+<li>Visual Studio 2010 SP1 (10.0.40219.1 SP1Rel);</li>
+</ul>
+</li>
+<li>Debian Linux 6.05 (x86),<ul>
+<li>GCC 4.4.5;</li>
+</ul>
+</li>
+<li>Ubuntu Linux 12.04 (x86),<ul>
+<li>GCC 4.6.x,</li>
+<li>Clang 3.1.x.</li>
+</ul>
+</li>
+</ul>
+<h3>Licence</h3>
 <pre class="fragment">Copyright (c) 2013 Clodéric Mars
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -60,10 +107,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 This is the MIT Licence, as found at http://opensource.org/licenses/MIT
-</pre> </div></div><!-- contents -->
+</pre><h2>Contributing</h2>
+<p>Helping to the development is as easy as reporting <a href="https://github.com/cloderic/curi/issues/new">issues</a>.</p>
+<p>If you have the time and skills to actually develop new features or fix issues,</p>
+<ol type="1">
+<li><a href="https://github.com/cloderic/curi/fork">fork</a> the repository,</li>
+<li>develop,</li>
+<li>create a <a href="https://github.com/cloderic/curi/compare">pull request</a>. </li>
+</ol>
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jun 26 2013 21:10:24 for CURI by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jun 27 2013 00:13:09 for CURI by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.4
 </small></address>
