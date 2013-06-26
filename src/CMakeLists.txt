@@ -5,3 +5,5 @@ if(CMAKE_COMPILER_IS_GNUCC)
 elseif(MSVC)
     set_property( TARGET curi APPEND_STRING PROPERTY COMPILE_FLAGS "/W4 /WX" )
 endif()
+
+install(FILES curi.h curi.c DESTINATION ./src)

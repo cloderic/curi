@@ -1,0 +1,121 @@
+# Doxyfile 1.8.4
+
+OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIR@
+
+#---------------------------------------------------------------------------
+# Project related configuration options
+#---------------------------------------------------------------------------
+
+DOXYFILE_ENCODING      = UTF-8
+PROJECT_NAME           = CURI
+PROJECT_NUMBER         = @CURI_VERSION_MAJOR@.@CURI_VERSION_MINOR@
+PROJECT_BRIEF          = "A tiny URI parser written in C"
+
+OUTPUT_LANGUAGE        = English
+
+# If the BRIEF_MEMBER_DESC tag is set to YES (the default) Doxygen will 
+# include brief member descriptions after the members that are listed in 
+# the file and class documentation (similar to JavaDoc). 
+# Set to NO to disable this.
+
+BRIEF_MEMBER_DESC      = YES
+
+# If the REPEAT_BRIEF tag is set to YES (the default) Doxygen will prepend 
+# the brief description of a member or function before the detailed description. 
+# Note: if both HIDE_UNDOC_MEMBERS and BRIEF_MEMBER_DESC are set to NO, the 
+# brief descriptions will be completely suppressed.
+
+REPEAT_BRIEF           = YES
+
+# This tag implements a quasi-intelligent brief description abbreviator 
+# that is used to form the text in various listings. Each string 
+# in this list, if found as the leading text of the brief description, will be 
+# stripped from the text and the result after processing the whole list, is 
+# used as the annotated text. Otherwise, the brief description is used as-is. 
+# If left blank, the following values are used ("$name" is automatically 
+# replaced with the name of the entity): "The $name class" "The $name widget" 
+# "The $name file" "is" "provides" "specifies" "contains" 
+# "represents" "a" "an" "the"
+
+ABBREVIATE_BRIEF       = "The $name class" \
+                         "The $name widget" \
+                         "The $name file" \
+                         is \
+                         provides \
+                         specifies \
+                         contains \
+                         represents \
+                         a \
+                         an \
+                         the
+
+# If the ALWAYS_DETAILED_SEC and REPEAT_BRIEF tags are both set to YES then 
+# Doxygen will generate a detailed section even if there is only a brief 
+# description.
+
+ALWAYS_DETAILED_SEC    = NO
+
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+
+OPTIMIZE_OUTPUT_FOR_C  = YES
+
+MARKDOWN_SUPPORT       = YES
+
+AUTOLINK_SUPPORT       = YES
+
+INLINE_GROUPED_CLASSES = YES
+INLINE_SIMPLE_STRUCTS  = YES
+
+EXTRACT_ALL            = YES
+
+GENERATE_DEPRECATEDLIST= YES
+
+#---------------------------------------------------------------------------
+# configuration options related to warning and progress messages
+#---------------------------------------------------------------------------
+
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+
+#---------------------------------------------------------------------------
+# configuration options related to the input files
+#---------------------------------------------------------------------------
+
+INPUT                  = ../src/curi.h \
+                         ../src/curi.c \
+                         index.md
+
+INPUT_ENCODING         = UTF-8
+
+EXAMPLE_PATH           = ../curi.LICENSE.txt
+
+USE_MDFILE_AS_MAINPAGE = index.md
+
+#---------------------------------------------------------------------------
+# configuration options related to source browsing
+#---------------------------------------------------------------------------
+
+SOURCE_BROWSER         = NO
+SHOW_FILES             = NO
+DISABLE_INDEX          = YES
+GENERATE_TREEVIEW      = NO
+
+#---------------------------------------------------------------------------
+# configuration options related to the alphabetical class index
+#---------------------------------------------------------------------------
+
+ALPHABETICAL_INDEX     = NO
+
+#---------------------------------------------------------------------------
+# configuration options related to the HTML output
+#---------------------------------------------------------------------------
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = @DOXYGEN_HTML_OUTPUT_DIR@
+HTML_FILE_EXTENSION    = .html
+SEARCHENGINE           = NO
+
+GENERATE_LATEX         = NO
