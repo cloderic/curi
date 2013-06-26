@@ -2,6 +2,9 @@ language: c
 compiler:
     - gcc
     - clang
+install: 
+    - sudo apt-get update -qq
+    - sudo apt-get -t testing install -q doxygen
 script: 
     - cmake ./
     - make all
