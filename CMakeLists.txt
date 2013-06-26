@@ -4,8 +4,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 
 project(curi)
 
-set(CURI_VERSION_MAJOR 1)
-set(CURI_VERSION_MINOR 0)
+set(CURI_VERSION_MAJOR 0)
+set(CURI_VERSION_MINOR 1)
 
 add_subdirectory(src)
 
