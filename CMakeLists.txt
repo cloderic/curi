@@ -13,3 +13,5 @@ add_subdirectory(doc)
 
 enable_testing()
 add_subdirectory(tests)
+
+install(FILES curi.LICENSE.txt DESTINATION ./)
