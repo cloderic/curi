@@ -9,6 +9,7 @@ cmake_dependent_option(GENERATE_DOCUMENTATION "Generate the user documentation u
 if(GENERATE_DOCUMENTATION)
   # Doxygen target setup
   set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+  set(DOXYGEN_HTML_OUTPUT_DIR html)
   set(DOXYGEN_CONFIGURED_INPUT ${CMAKE_CURRENT_BINARY_DIR}/doxyfile)
   configure_file(curi.dox.in ${DOXYGEN_CONFIGURED_INPUT} @ONLY)
 
