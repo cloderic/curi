@@ -136,9 +136,9 @@ TEST_CASE("ParsePath/Success", "Valid pathes")
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == sizeof(char)*(
-            strlen("liz+taylor/is%20f%23%26ing%20very/rich") + 1 + 
-            strlen("liz+taylor") + 1 + 
-            strlen("is%20f%23%26ing%20very") + 1 + 
+            strlen("liz+taylor/is%20f%23%26ing%20very/rich") + 1 +
+            strlen("liz+taylor") + 1 +
+            strlen("is%20f%23%26ing%20very") + 1 +
             strlen("rich") + 1));
         CHECK(uri.deallocatedMemory == uri.deallocatedMemory);
 
@@ -180,8 +180,8 @@ TEST_CASE("ParsePath/RetrieveOnlySegments", "Valid pathes")
         CHECK(uri.query.empty());
         CHECK(uri.fragment.empty());
         CHECK(uri.allocatedMemory == sizeof(char)*(
-            strlen("liz+taylor") + 1 + 
-            strlen("is%20f%23%26ing%20very") + 1 + 
+            strlen("liz+taylor") + 1 +
+            strlen("is%20f%23%26ing%20very") + 1 +
             strlen("rich") + 1));
         CHECK(uri.deallocatedMemory == uri.deallocatedMemory);
 

@@ -6,7 +6,7 @@ include_directories(
 add_executable(curi_tests
   Common.h
   Settings.cpp
-  ParseFullUri.cpp 
+  ParseFullUri.cpp
   ParsePath.cpp
   ParseQuery.cpp
   UrlDecode.cpp)
@@ -19,21 +19,21 @@ if(MSVC)
 endif()
 
 add_test(
-  NAME Settings 
+  NAME Settings
   COMMAND curi_tests -t Settings/*)
 
 add_test(
-  NAME ParseFullUri 
+  NAME ParseFullUri
   COMMAND curi_tests -t ParseFullUri/*)
 
 add_test(
-  NAME ParseQuery 
+  NAME ParseQuery
   COMMAND curi_tests -t ParseQuery/*)
 
 add_test(
-  NAME ParsePath 
+  NAME ParsePath
   COMMAND curi_tests -t ParsePath/*)
 
 add_test(
-  NAME UrlDecode 
+  NAME UrlDecode
   COMMAND curi_tests -t UrlDecode/*)

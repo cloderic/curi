@@ -53,7 +53,7 @@ The best way to use **curi** in your C/C++ project is simply to include directly
 
 Helping to the development is as easy as reporting [issues](https://github.com/cloderic/curi/issues/new).
 
-If you have the time and skills to actually develop new features or fix issues, 
-1. [fork](https://github.com/cloderic/curi/fork) the repository, 
+If you have the time and skills to actually develop new features or fix issues,
+1. [fork](https://github.com/cloderic/curi/fork) the repository,
 2. develop,
 3. create a [pull request](https://github.com/cloderic/curi/compare).

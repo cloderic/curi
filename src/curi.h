@@ -31,20 +31,20 @@ extern "C" {
     \brief Parsing URIs and URI elements.
  */
 
-/** Error codes returned from this interface 
-    \ingroup parsing 
+/** Error codes returned from this interface
+    \ingroup parsing
 */
-typedef enum 
+typedef enum
 {
     curi_status_success = 0, //!< No error
-    curi_status_canceled, //!< A callback returned 0, stopping the operation 
+    curi_status_canceled, //!< A callback returned 0, stopping the operation
     curi_status_error //!< An error occured
 } curi_status;
 
-/** Parsing parameters 
-    \ingroup parsing 
+/** Parsing parameters
+    \ingroup parsing
 */
-typedef struct 
+typedef struct
 {
     void* (*allocate)(void* userData, size_t size); //!< function used for memory allocation (default is based on malloc).
     void (*deallocate)(void* userData, void* ptr, size_t size); //!< function used for memory deallocation (default is based on free).
@@ -66,13 +66,13 @@ typedef struct
     int url_decode; //!< if != 0, the string passed to the callbacks ae first url decoded, requiring the allocation of a temporary string.
 } curi_settings;
 
-/** Set the given settings to their default value 
+/** Set the given settings to their default value
 
     \ingroup parsing
 */
 void curi_default_settings(curi_settings* settings);
 
-/** Parse the given NULL-terminated string as a full URI. 
+/** Parse the given NULL-terminated string as a full URI.
 
     \note This function doesn't do compute `strlen(uri)`, it calls `curi_parse_full_uri`
     with a length set to SIZE_MAX.
@@ -81,10 +81,10 @@ void curi_default_settings(curi_settings* settings);
 */
 curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
-/** Parse the given string as a full URI specifying its length. 
+/** Parse the given string as a full URI specifying its length.
 
-    \note In practice the parsing ends once the given length is reached or a 
-    NULL-character ('\0') is read, making this function working for NULL-terminated 
+    \note In practice the parsing ends once the given length is reached or a
+    NULL-character ('\0') is read, making this function working for NULL-terminated
     string as well.
 
     \ingroup parsing
@@ -100,10 +100,10 @@ curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings
 */
 curi_status curi_parse_path_nt(const char* path, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
-/** Parse the given string as a URI path specifying its length. 
+/** Parse the given string as a URI path specifying its length.
 
-    \note In practice the parsing ends once the given length is reached or a 
-    NULL-character ('\0') is read, making this function working for NULL-terminated 
+    \note In practice the parsing ends once the given length is reached or a
+    NULL-character ('\0') is read, making this function working for NULL-terminated
     string as well.
 
     \ingroup parsing
@@ -119,10 +119,10 @@ curi_status curi_parse_path(const char* path, size_t len, const curi_settings* s
 */
 curi_status curi_parse_query_nt(const char* query, const curi_settings* settings /*= 0*/, void* userData /*= 0*/);
 
-/** Parse the given string as a URI query specifying its length. 
+/** Parse the given string as a URI query specifying its length.
 
-    \note In practice the parsing ends once the given length is reached or a 
-    NULL-character ('\0') is read, making this function working for NULL-terminated 
+    \note In practice the parsing ends once the given length is reached or a
+    NULL-character ('\0') is read, making this function working for NULL-terminated
     string as well.
 
     \ingroup parsing
@@ -134,7 +134,7 @@ curi_status curi_parse_query(const char* query, size_t len, const curi_settings*
  */
 
 /** URL Decode the given string.
-    
+
     - Percent decoding of ascii characters (from %00 to %1F) are supported
     - as well as '+' standing for a space.
 
@@ -146,12 +146,12 @@ curi_status curi_parse_query(const char* query, size_t len, const curi_settings*
 curi_status curi_url_decode_nt(const char* input, char* output, size_t outputCapacity, size_t* outputLen /*=0*/);
 
 /** URL Decode the given string.
-    
+
     - Percent decoding of ascii characters (from %00 to %1F) are supported
     - as well as '+' standing for a space.
 
-    \note In practice the parsing ends once the given length is reached or a 
-    NULL-character ('\0') is read, making this function working for NULL-terminated 
+    \note In practice the parsing ends once the given length is reached or a
+    NULL-character ('\0') is read, making this function working for NULL-terminated
     string as well.
 
     \ingroup url_decoding

@@ -42,10 +42,10 @@ struct URI
     std::string path;
     std::vector<std::string> pathSegments;
     std::string query;
-    std::set<std::string> queryNullItems; 
+    std::set<std::string> queryNullItems;
     std::map<std::string, std::string> queryStrItems;
-    std::map<std::string, long int> queryIntItems; 
-    std::map<std::string, double> queryDoubleItems; 
+    std::map<std::string, long int> queryIntItems;
+    std::map<std::string, double> queryDoubleItems;
     std::string fragment;
 
     void clear()

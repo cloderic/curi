@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 #ifdef _MSC_VER
-#   pragma warning(push) 
+#   pragma warning(push)
 #   pragma warning(disable: 4100) // Disabling the 'unreferenced formal parameter' visual studio warning
 #endif
 
@@ -68,7 +68,7 @@ static curi_status handle_str_callback_url_decoded(int (*callback)(void* userDat
         size_t allocationSize = (strLen+1) * sizeof(char);
         size_t urlDecodedStrLen;
         char* urlDecodedStr = (char*)settings->allocate(userData, allocationSize);
-            
+
         status = curi_url_decode(str,strLen,urlDecodedStr,strLen+1,&urlDecodedStrLen);
 
         if (status == curi_status_success)
@@ -111,7 +111,7 @@ static curi_status handle_port(const char* portStr, size_t portStrLen, const cur
         if (portStrLen > 0 && settings->port_callback)
         {
             unsigned int value = atoi(portStr); // Should work because there is no number after the port in URIs
-            if(settings->port_callback(userData, value) == 0) 
+            if(settings->port_callback(userData, value) == 0)
                 status =  curi_status_canceled;
         }
     }
@@ -254,7 +254,7 @@ static curi_status handle_fragment(const char* fragment, size_t fragmentLen, con
 static const char end = '\0';
 
 static const char* read_char(const char* uri, size_t len, size_t* offset)
-{    
+{
     const char* c = &end;
     if (*offset < len)
     {
@@ -348,7 +348,7 @@ static curi_status parse_digit(const char* uri, size_t len, size_t* offset, cons
             return curi_status_success;
         default:
             return curi_status_error;
-    }  
+    }
 }
 
 static curi_status parse_char(char c, const char* uri, size_t len, size_t* offset, const curi_settings* settings, void* userDatat)
@@ -422,7 +422,7 @@ static curi_status parse_unreserved(const char* uri, size_t len, size_t* offset,
             return curi_status_success;
         default:
             return curi_status_error;
-    } 
+    }
 }
 
 #define CASE_HEXDIGIT \
@@ -536,11 +536,11 @@ static curi_status parse_userinfo_and_at(const char* uri, size_t len, size_t* of
                 status = curi_status_error;
         }
         if (status == curi_status_error)
-            *offset = initialOffset;        
+            *offset = initialOffset;
     }
 
     userinfoEndOffset = *offset;
-    
+
     status = parse_char('@', uri, len, offset, settings, userData);
 
     if (status == curi_status_success)
@@ -570,7 +570,7 @@ static curi_status parse_reg_name(const char* uri, size_t len, size_t* offset, c
                 status = curi_status_error;
         }
         if (status == curi_status_error)
-            *offset = initialOffset;        
+            *offset = initialOffset;
     }
 
     return curi_status_success;
@@ -735,7 +735,7 @@ static curi_status parse_IPv6address(const char* uri, size_t len, size_t* offset
         else
             status = tryStatus;
     }
-    
+
     if (status == curi_status_success)
     {
         status = curi_status_error;
@@ -839,7 +839,7 @@ static curi_status parse_host(const char* uri, size_t len, size_t* offset, const
 
     if (status == curi_status_error)
         TRY(status, offset, parse_IP_literal(uri, len, offset, settings, userData));
-    
+
     if (status == curi_status_error)
         TRY(status, offset, parse_IPv4address(uri, len, offset, settings, userData));
 
@@ -1086,7 +1086,7 @@ static curi_status parse_path(const char* uri, size_t len, size_t* offset, const
 
     if (status == curi_status_error)
         TRY(status,offset,parse_path_empty(uri, len, offset, settings, userData));
-    
+
     return status;
 }
 
@@ -1113,10 +1113,10 @@ static curi_status parse_hier_part(const char* uri, size_t len, size_t* offset, 
         else
             status = tryStatus;
     }
-    
+
     if (status == curi_status_error)
         TRY(status,offset,parse_path(uri, len, offset, settings, userData));
-    
+
     return status;
 }
 
@@ -1179,7 +1179,7 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
                     break;
             }
         }
-        
+
         if (status != curi_status_success)
             *offset = previousOffset;
     };
@@ -1187,7 +1187,7 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
     keyEndOffset = *offset;
 
     status = parse_char(settings->query_item_key_separator, uri, len, offset, settings, userData);
-    
+
     if (status == curi_status_success)
     {
         // There is a value
@@ -1215,7 +1215,7 @@ static curi_status parse_query_item(const char* uri, size_t len, size_t* offset,
                         break;
                 }
             }
-        
+
             if (status != curi_status_success)
                 *offset = previousOffset;
         }
@@ -1301,7 +1301,7 @@ static curi_status parse_fragment(const char* uri, size_t len, size_t* offset, c
     // fragment = "#" *query_fragment_char
     curi_status status = curi_status_success;
     size_t fragmentStartOffset;
-    
+
     if (status == curi_status_success)
         status = parse_char('#', uri, len, offset, settings, userData);
 
@@ -1312,7 +1312,7 @@ static curi_status parse_fragment(const char* uri, size_t len, size_t* offset, c
         while (status == curi_status_success)
         {
             size_t previousOffset = *offset;
-            
+
             status = parse_query_fragment_char(uri, len, offset, settings, userData);
 
             if (status != curi_status_success)
@@ -1354,18 +1354,18 @@ curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings
 {
     size_t offset = 0;
     curi_status status;
-    
+
     if (settings)
     {
         // parsing with the given settings
-        status = parse_full_uri(uri, len, &offset, settings, userData); 
+        status = parse_full_uri(uri, len, &offset, settings, userData);
     }
     else
     {
         curi_settings defaultSettings;
         curi_default_settings(&defaultSettings);
         // parsing with default settings
-        status = parse_full_uri(uri, len, &offset, &defaultSettings, userData); 
+        status = parse_full_uri(uri, len, &offset, &defaultSettings, userData);
     }
 
     if (status == curi_status_success && *read_char(uri,len,&offset) != '\0')
@@ -1373,7 +1373,7 @@ curi_status curi_parse_full_uri(const char* uri, size_t len, const curi_settings
         // TODO: set an error string somewhere
         status = curi_status_error;
 
-    return status; 
+    return status;
 }
 
 curi_status curi_parse_full_uri_nt(const char* uri, const curi_settings* settings /*= 0*/, void* userData /*= 0*/)
@@ -1385,18 +1385,18 @@ curi_status curi_parse_path(const char* path, size_t len, const curi_settings* s
 {
     size_t offset = 0;
     curi_status status;
-    
+
     if (settings)
     {
         // parsing with the given settings
-        status = parse_path(path, len, &offset, settings, userData); 
+        status = parse_path(path, len, &offset, settings, userData);
     }
     else
     {
         curi_settings defaultSettings;
         curi_default_settings(&defaultSettings);
         // parsing with default settings
-        status = parse_path(path, len, &offset, &defaultSettings, userData); 
+        status = parse_path(path, len, &offset, &defaultSettings, userData);
     }
 
     if (status == curi_status_success && *read_char(path, len, &offset) != '\0')
@@ -1404,7 +1404,7 @@ curi_status curi_parse_path(const char* path, size_t len, const curi_settings* s
         // TODO: set an error string somewhere
         status = curi_status_error;
 
-    return status; 
+    return status;
 }
 
 
@@ -1417,18 +1417,18 @@ curi_status curi_parse_query(const char* query, size_t len, const curi_settings*
 {
     size_t offset = 0;
     curi_status status;
-    
+
     if (settings)
     {
         // parsing with the given settings
-        status = parse_query(query, len, &offset, settings, userData, 0); 
+        status = parse_query(query, len, &offset, settings, userData, 0);
     }
     else
     {
         curi_settings defaultSettings;
         curi_default_settings(&defaultSettings);
         // parsing with default settings
-        status = parse_query(query, len, &offset, &defaultSettings, userData, 0); 
+        status = parse_query(query, len, &offset, &defaultSettings, userData, 0);
     }
 
     if (status == curi_status_success && *read_char(query, len, &offset) != '\0')
@@ -1452,7 +1452,7 @@ curi_status curi_url_decode(const char* input, size_t inputLen, char* output, si
 
     #define HEXTOI(x) (isdigit(x) ? x - '0' : tolower(x) - 'a' + 10)
 
-    while ( outputOffset < outputCapacity ) 
+    while ( outputOffset < outputCapacity )
     {
         status = curi_status_error;
         if (status == curi_status_error)
