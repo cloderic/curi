@@ -13,28 +13,28 @@ PROJECT_BRIEF          = "A tiny URI parser written in C"
 
 OUTPUT_LANGUAGE        = English
 
-# If the BRIEF_MEMBER_DESC tag is set to YES (the default) Doxygen will 
-# include brief member descriptions after the members that are listed in 
-# the file and class documentation (similar to JavaDoc). 
+# If the BRIEF_MEMBER_DESC tag is set to YES (the default) Doxygen will
+# include brief member descriptions after the members that are listed in
+# the file and class documentation (similar to JavaDoc).
 # Set to NO to disable this.
 
 BRIEF_MEMBER_DESC      = YES
 
-# If the REPEAT_BRIEF tag is set to YES (the default) Doxygen will prepend 
-# the brief description of a member or function before the detailed description. 
-# Note: if both HIDE_UNDOC_MEMBERS and BRIEF_MEMBER_DESC are set to NO, the 
+# If the REPEAT_BRIEF tag is set to YES (the default) Doxygen will prepend
+# the brief description of a member or function before the detailed description.
+# Note: if both HIDE_UNDOC_MEMBERS and BRIEF_MEMBER_DESC are set to NO, the
 # brief descriptions will be completely suppressed.
 
 REPEAT_BRIEF           = YES
 
-# This tag implements a quasi-intelligent brief description abbreviator 
-# that is used to form the text in various listings. Each string 
-# in this list, if found as the leading text of the brief description, will be 
-# stripped from the text and the result after processing the whole list, is 
-# used as the annotated text. Otherwise, the brief description is used as-is. 
-# If left blank, the following values are used ("$name" is automatically 
-# replaced with the name of the entity): "The $name class" "The $name widget" 
-# "The $name file" "is" "provides" "specifies" "contains" 
+# This tag implements a quasi-intelligent brief description abbreviator
+# that is used to form the text in various listings. Each string
+# in this list, if found as the leading text of the brief description, will be
+# stripped from the text and the result after processing the whole list, is
+# used as the annotated text. Otherwise, the brief description is used as-is.
+# If left blank, the following values are used ("$name" is automatically
+# replaced with the name of the entity): "The $name class" "The $name widget"
+# "The $name file" "is" "provides" "specifies" "contains"
 # "represents" "a" "an" "the"
 
 ABBREVIATE_BRIEF       = "The $name class" \
@@ -49,8 +49,8 @@ ABBREVIATE_BRIEF       = "The $name class" \
                          an \
                          the
 
-# If the ALWAYS_DETAILED_SEC and REPEAT_BRIEF tags are both set to YES then 
-# Doxygen will generate a detailed section even if there is only a brief 
+# If the ALWAYS_DETAILED_SEC and REPEAT_BRIEF tags are both set to YES then
+# Doxygen will generate a detailed section even if there is only a brief
 # description.
 
 ALWAYS_DETAILED_SEC    = NO

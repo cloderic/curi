@@ -2,7 +2,7 @@ find_package(Doxygen)
 include(CMakeDependentOption)
 
 # Options
-cmake_dependent_option(GENERATE_DOCUMENTATION "Generate the user documentation using doxygen" 
+cmake_dependent_option(GENERATE_DOCUMENTATION "Generate the user documentation using doxygen"
     ON "DOXYGEN_FOUND"
     OFF)
 

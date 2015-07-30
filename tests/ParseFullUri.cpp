@@ -78,7 +78,7 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
     SECTION("Simple_Len", "")
     {
         const std::string uriStr("foo://bar@example.com:8042/over/there?name=ferret#nose");
-        
+
         CHECK(curi_status_success == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
 
         CHECK(uri.scheme == "foo");
@@ -404,8 +404,8 @@ TEST_CASE("ParseFullUri/Success/Full", "Valid full URIs")
         CHECK(uri.fragment == "c:\\Program Files");
 
         CHECK(uri.allocatedMemory == sizeof(char)*(
-            strlen("some%20random%20dude") + 1 + 
-            strlen("paren(thesis).org") + 1 + 
+            strlen("some%20random%20dude") + 1 +
+            strlen("paren(thesis).org") + 1 +
             strlen("/brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
             strlen("brac%5Bkets%5D%3Alove%7Bthe%7Cpipe%7D") + 1 +
             strlen("don%27t+you+think") + 1 +
@@ -509,7 +509,7 @@ TEST_CASE("ParseFullUri/Error/Scheme", "Bad URIs, scheme focus")
     SECTION("StartingWithNumber", "")
     {
         const std::string uriStr("3ftp://hello.org");
-        
+
         CHECK(curi_status_error == curi_parse_full_uri(uriStr.c_str(), uriStr.length(), &settings, &uri));
     }
 
