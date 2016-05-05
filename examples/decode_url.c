@@ -18,63 +18,59 @@
 
 #include "common.h"
 
-static	int	 decode(const char *);
-static	int	 parse_args(int, char **);
+static int decode(const char*);
+static int parse_args(int, char**);
 
-static int
-decode(const char *url)
+static int decode(const char* url)
 {
-	char	 buf[2048];
-	size_t	 len;
+    char   buf[2048];
+    size_t len;
 
-	if (curi_url_decode_nt(url, buf, sizeof(buf), &len)
-	    != curi_status_success) {
-		fprintf(stderr, "curi_url_decode_nt() failed\n");
-		return EXIT_FAILURE;
-	}
+    if (curi_url_decode_nt(url, buf, sizeof(buf), &len) != curi_status_success)
+    {
+        fprintf(stderr, "curi_url_decode_nt() failed\n");
+        return EXIT_FAILURE;
+    }
 
-	buf[len] = '\0';
-	puts(buf);
-	return EXIT_SUCCESS;
+    buf[len] = '\0';
+    puts(buf);
+    return EXIT_SUCCESS;
 }
 
-static int
-parse_args(int argc, char **argv)
+static int parse_args(int argc, char** argv)
 {
-	const char *progname = get_progname(*argv);
+    const char* progname = get_progname(*argv);
 
-	if (argc != 2) {
-		goto wrongArgs;
-	}
-	if (argv[1][0] != '-') {
-		return 0;
-	}
-	if (argv[1][1] == '\0' || argv[1][2] != '\0') {
-		goto wrongArgs;
-	}
+    if (argc != 2)
+        goto wrongArgs;
 
-	switch (argv[1][1]) {
-	case 'h':
-		fprintf(stdout, "usage: %s [-h] url\n", progname);
-		return EXIT_OK;
-	default:
-		fprintf(stderr, "unknown option: '%c'\n", argv[1][1]);
-		return EXIT_ERR;
-	}
+    if (argv[1][0] != '-')
+        return 0;
+
+    if (argv[1][1] == '\0' || argv[1][2] != '\0')
+        goto wrongArgs;
+
+    switch (argv[1][1])
+    {
+        case 'h':
+            fprintf(stdout, "usage: %s [-h] url\n", progname);
+            return EXIT_OK;
+        default:
+            fprintf(stderr, "unknown option: '%c'\n", argv[1][1]);
+            return EXIT_ERR;
+    }
 
 wrongArgs:
-	fprintf(stderr, "wrong # args: must be \"%s [-h] url\"\n", progname);
-	return EXIT_ERR;
+    fprintf(stderr, "wrong # args: must be \"%s [-h] url\"\n", progname);
+    return EXIT_ERR;
 }
 
-int
-main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-	int rc;
+    int rc;
 
-	if ((rc = parse_args(argc, argv)) < 0) {
-		return rc == EXIT_OK ? EXIT_SUCCESS : EXIT_FAILURE;
-	}
+    if ((rc = parse_args(argc, argv)) < 0)
+        return rc == EXIT_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 
-	return decode(argv[argc - 1]);
+    return decode(argv[argc - 1]);
 }

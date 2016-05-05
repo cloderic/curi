@@ -26,21 +26,20 @@
 
 #include <curi.h>
 
-enum	exit_status {
-	EXIT_ERR = -2,
-	EXIT_OK  = -1
+enum exit_status
+{
+    EXIT_ERR = -2,
+    EXIT_OK  = -1
 };
 
-static inline const char *
-get_progname(const char *str)
+static inline const char* get_progname(const char* str)
 {
-	const char *s;
+    const char* s;
 
-	if ((s = strrchr(str, '/')) != NULL) {
-		return ++s;
-	}
+    if ((s = strrchr(str, '/')) != NULL)
+        return ++s;
 
-	return str;
+    return str;
 }
 
 #endif /* COMMON_H */
