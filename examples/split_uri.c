@@ -16,6 +16,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <unistd.h>
+
 #include "common.h"
 
 #define PARSE(type) do                                                    \
@@ -48,8 +50,8 @@ static int query_item_str(void*, const char*, size_t, const char*, size_t);
 static int fragment(void*, const char*, size_t);
 
 static void init_curi_settings(curi_settings*);
-static int  split(const char*, int);
-static int  parse_args(int, char**, int*);
+static int  split(const char*, int, int);
+static int  parse_args(int, char**, int*, int*);
 
 static int scheme(void* data, const char* str, size_t len)
 {
@@ -131,11 +133,12 @@ static void init_curi_settings(curi_settings* s)
     s->fragment_callback          = fragment;
 }
 
-static int split(const char* uri, int flag)
+static int split(const char* uri, int decode, int flag)
 {
     curi_settings s;
 
     init_curi_settings(&s);
+    s.url_decode = decode;
 
     if (flag == FULLURI)
         PARSE(full_uri);
@@ -147,37 +150,43 @@ static int split(const char* uri, int flag)
     return EXIT_SUCCESS;
 }
 
-static int parse_args(int argc, char** argv, int* flag)
+static int parse_args(int argc, char** argv, int* decode, int* flag)
 {
-    const char* progname = get_progname(*argv);
-    *flag = FULLURI;
+    const char* progname;
+    int         c;
 
-    if (argc < 2 || argc > 3)
+    *decode  = 0;
+    *flag    = FULLURI;
+    progname = get_progname(*argv);
+
+    if (argc < 2 || argc > 4)
         goto wrongArgs;
 
     if (argc == 2 && argv[1][0] != '-')
         return 0;
 
-    if (argv[1][0] != '-' || argv[1][1] == '\0' || argv[1][2] != '\0')
-        goto wrongArgs;
-
-    switch (argv[1][1])
+    while ((c = getopt(argc, argv, "dhpq")) != -1)
     {
-        case 'h':
-            fprintf(stdout, "usage: %s [-hpq] uri\n", progname);
-            return EXIT_OK;
-        case 'p':
-            *flag = PATH;
-            break;
-        case 'q':
-            *flag = QUERY;
-            break;
-        default:
-            fprintf(stderr, "unknown option: '%c'\n", argv[1][1]);
-            return EXIT_ERR;
+        switch (c)
+        {
+            case 'd':
+                *decode = 1;
+                break;
+            case 'h':
+                fprintf(stdout, "usage: %s [-dhpq] uri\n", progname);
+                return EXIT_OK;
+            case 'p':
+                *flag = PATH;
+                break;
+            case 'q':
+                *flag = QUERY;
+                break;
+            default:
+                return EXIT_ERR;
+        }
     }
 
-    if (argc == 2)
+    if (optind >= argc)
     {
         fprintf(stderr, "missing a uri\n");
         return EXIT_ERR;
@@ -186,17 +195,17 @@ static int parse_args(int argc, char** argv, int* flag)
     return 0;
 
 wrongArgs:
-    fprintf(stderr, "wrong # args: must be \"%s [-hpq] uri\"\n", progname);
+    fprintf(stderr, "wrong # args: must be \"%s [-dhpq] uri\"\n", progname);
     return EXIT_ERR;
 }
 
 int main(int argc, char** argv)
 {
-    int flag;
+    int decode, flag;
     int rc;
 
-    if ((rc = parse_args(argc, argv, &flag)) < 0)
+    if ((rc = parse_args(argc, argv, &decode, &flag)) < 0)
         return rc == EXIT_OK ? EXIT_SUCCESS : EXIT_FAILURE;
 
-    return split(argv[argc - 1], flag);
+    return split(argv[argc - 1], decode, flag);
 }
