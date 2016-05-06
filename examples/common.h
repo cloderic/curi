@@ -35,11 +35,7 @@ enum exit_status
 static inline const char* get_progname(const char* str)
 {
     const char* s;
-
-    if ((s = strrchr(str, '/')) != NULL)
-        return ++s;
-
-    return str;
+    return ((s = strrchr(str, '/')) != NULL) ? ++s : str;
 }
 
 #endif /* COMMON_H */
