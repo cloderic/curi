@@ -20,15 +20,6 @@
 
 #include "common.h"
 
-#define PARSE(type) do                                                    \
-{                                                                         \
-    if (curi_parse_ ## type ## _nt(uri, &s, NULL) != curi_status_success) \
-    {                                                                     \
-        fprintf(stderr, "curi_parse_" #type "_nt() failed\n");            \
-        return EXIT_FAILURE;                                              \
-    }                                                                     \
-} while (0)
-
 enum
 {
     FULLURI,
@@ -140,14 +131,21 @@ static int split(const char* uri, int decode, int flag)
     init_curi_settings(&s);
     s.url_decode = decode;
 
-    if (flag == FULLURI)
-        PARSE(full_uri);
-    else if (flag == PATH)
-        PARSE(path);
-    else
-        PARSE(query);
+    if (flag == FULLURI
+            && curi_parse_full_uri_nt(uri, &s, NULL) != curi_status_success)
+        goto failure;
+    else if (flag == PATH
+            && curi_parse_path_nt(uri, &s, NULL) != curi_status_success)
+        goto failure;
+    else if (flag == QUERY
+            && curi_parse_query_nt(uri, &s, NULL) != curi_status_success)
+        goto failure;
 
     return EXIT_SUCCESS;
+
+failure:
+    fprintf(stderr, "split() failed\n");
+    return EXIT_FAILURE;
 }
 
 static int parse_args(int argc, char** argv, int* decode, int* flag)
