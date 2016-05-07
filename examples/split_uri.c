@@ -131,21 +131,18 @@ static int split(const char* uri, int decode, int flag)
     init_curi_settings(&s);
     s.url_decode = decode;
 
-    if (flag == FULLURI
+    if ((flag == FULLURI
             && curi_parse_full_uri_nt(uri, &s, NULL) != curi_status_success)
-        goto failure;
-    else if (flag == PATH
+            || (flag == PATH
             && curi_parse_path_nt(uri, &s, NULL) != curi_status_success)
-        goto failure;
-    else if (flag == QUERY
-            && curi_parse_query_nt(uri, &s, NULL) != curi_status_success)
-        goto failure;
+            || (flag == QUERY
+            && curi_parse_query_nt(uri, &s, NULL) != curi_status_success))
+    {
+        fprintf(stderr, "split() failed\n");
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
-
-failure:
-    fprintf(stderr, "split() failed\n");
-    return EXIT_FAILURE;
 }
 
 static int parse_args(int argc, char** argv, int* decode, int* flag)
