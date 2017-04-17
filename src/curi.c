@@ -160,7 +160,7 @@ static curi_status handle_query_item_decodedKey(const char* key, size_t keyLen, 
     if (valueLen != 0 && settings->query_item_int_callback)
     {
         char* valueEnd = 0;
-        long int intValue = 0;
+        long intValue = 0;
         intValue = strtol(value,&valueEnd,10); // Trying to parse an integer
         if (valueEnd == value + valueLen)
         {
